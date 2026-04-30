@@ -1,0 +1,12 @@
+export const SHEET_COLUMNS = 3;
+export const SHEET_ROWS = 3;
+export const FRAME_DURATION_MS = 120;
+export const CANVAS_SIZE = 180;
+export const STAGE_WIDTH = 320;
+export const STAGE_HEIGHT = 400;
+export const CANVAS_PADDING = 6;
+export const TRIM_PADDING = 4;
+export const COLOR_TOLERANCE = 10;
+export const MENU_CLOSE_DELAY_MS = 160;
+export const HIT_ALPHA_THRESHOLD = 24;
+export const STATUS_RESET_DELAY_MS = 1800;

@@ -1,0 +1,90 @@
+.json-tree {
+  min-height: 100%;
+  color: #5e2144;
+  font-family: "SF Mono", "Monaco", "Menlo", monospace;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.json-tree-node {
+  min-width: max-content;
+}
+
+.json-tree-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding-left: calc(var(--json-tree-depth) * 18px);
+}
+
+.json-tree-indent {
+  width: 0;
+  flex: none;
+}
+
+.json-tree-bullet {
+  width: 18px;
+  flex: none;
+}
+
+.json-tree-toggle {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border: 0;
+  padding: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #c24b86;
+  font-size: 11px;
+  line-height: 18px;
+  cursor: pointer;
+}
+
+.json-tree-toggle:hover {
+  background: rgba(242, 100, 168, 0.08);
+}
+
+.json-tree-index {
+  color: #d15a9a;
+  font-weight: 700;
+}
+
+.json-tree-key {
+  color: #8f2a68;
+  font-weight: 700;
+}
+
+.json-tree-colon,
+.json-tree-bracket {
+  color: #9a4d79;
+}
+
+.json-tree-summary {
+  color: #b56f94;
+}
+
+.json-tree-value.is-string {
+  color: #b13a6c;
+}
+
+.json-tree-value.is-number {
+  color: #6f3fcb;
+}
+
+.json-tree-value.is-boolean {
+  color: #0c8a74;
+}
+
+.json-tree-value.is-null {
+  color: #7c7b91;
+}
+
+.json-tree-children {
+  display: flex;
+  flex-direction: column;
+}
+
+.json-tree-closing {
+  margin-top: 2px;
+}
