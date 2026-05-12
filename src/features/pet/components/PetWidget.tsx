@@ -1,10 +1,8 @@
-import type { MouseEvent } from "react";
-import {
-  JsonInputPanel,
-  useJsonParser,
-  type ParsedJsonResult,
-} from "../../json-parser";
-import { petBubbleAction } from "../config/bubbleAction";
+import { useEffect, type MouseEvent } from "react";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import type { ParsedJsonResult } from "../../json-parser";
+import { openJsonInputWindow } from "../../json-parser";
+import { petBubbleAction, petSettingsAction } from "../config/bubbleAction";
 import { usePetAnimation } from "../hooks/usePetAnimation";
 import { usePetBubble } from "../hooks/usePetBubble";
 import { useStatusMessage } from "../hooks/useStatusMessage";
@@ -29,22 +27,27 @@ export function PetWidget({ onJsonParsed }: PetWidgetProps) {
     handleBubblePointerEnter,
     handleBubblePointerLeave,
   } = usePetBubble(drawStateRef, viewport);
-  const { statusText, showStatus } = useStatusMessage();
-  const {
-    panelVisible,
-    inputValue,
-    errorText,
-    openPanel,
-    closePanel,
-    handleInputChange,
-    submitInput,
-  } = useJsonParser(onJsonParsed);
+  const { statusText } = useStatusMessage();
+
+  useEffect(() => {
+    let unlisten: UnlistenFn | undefined;
+
+    const setupListener = async () => {
+      unlisten = await listen<ParsedJsonResult>("json-input-submitted", (event) => {
+        onJsonParsed(event.payload);
+      });
+    };
+
+    void setupListener();
+
+    return () => {
+      if (unlisten) {
+        unlisten();
+      }
+    };
+  }, [onJsonParsed]);
 
   const handleStageMouseDown = (event: MouseEvent<HTMLElement>) => {
-    if (panelVisible) {
-      closePanel();
-    }
-
     if (!shouldStartWindowDrag(event)) {
       return;
     }
@@ -58,16 +61,11 @@ export function PetWidget({ onJsonParsed }: PetWidgetProps) {
 
   const handleBubbleClick = () => {
     hideBubble();
-    showStatus("输入 JSON 吧");
-    openPanel();
+    void openJsonInputWindow();
   };
 
-  const handlePanelMouseDown = (event: MouseEvent<HTMLElement>) => {
-    event.stopPropagation();
-  };
-
-  const handlePanelSubmit = () => {
-    submitInput();
+  const handleSettingsClick = () => {
+    // 设置功能待实现
   };
 
   return (
@@ -77,15 +75,6 @@ export function PetWidget({ onJsonParsed }: PetWidgetProps) {
       onMouseDown={handleStageMouseDown}
     >
       <PetStatus text={statusText} />
-
-      <JsonInputPanel
-        visible={panelVisible}
-        value={inputValue}
-        errorText={errorText}
-        onChange={handleInputChange}
-        onSubmit={handlePanelSubmit}
-        onMouseDown={handlePanelMouseDown}
-      />
 
       <PetCanvas
         canvasRef={canvasRef}
@@ -98,11 +87,21 @@ export function PetWidget({ onJsonParsed }: PetWidgetProps) {
         <PetBubble
           action={petBubbleAction}
           anchor={bubbleAnchor}
-          visible={bubbleVisible && !panelVisible}
+          visible={bubbleVisible}
           onMouseDown={handleBubbleMouseDown}
           onPointerEnter={handleBubblePointerEnter}
           onPointerLeave={handleBubblePointerLeave}
           onClick={handleBubbleClick}
+        />
+        <PetBubble
+          action={petSettingsAction}
+          anchor={bubbleAnchor}
+          visible={bubbleVisible}
+          className="pet-bubble--settings"
+          onMouseDown={handleBubbleMouseDown}
+          onPointerEnter={handleBubblePointerEnter}
+          onPointerLeave={handleBubblePointerLeave}
+          onClick={handleSettingsClick}
         />
       </div>
     </section>

@@ -1,5 +1,4 @@
 import {
-  CANVAS_PADDING,
   COLOR_TOLERANCE,
   PET_MAX_ANIMATION_RATIO,
   PET_VIEWPORT_HEIGHT,
@@ -110,8 +109,8 @@ export function drawFrame(
   );
   const drawWidth = frame.width * drawScale;
   const drawHeight = frame.height * drawScale;
-  const drawX = CANVAS_PADDING;
-  const drawY = viewport.height - drawHeight - CANVAS_PADDING;
+  const drawX = (viewport.width - drawWidth) / 2;
+  const drawY = (viewport.height - drawHeight) / 2;
 
   context.drawImage(frame.bitmap, drawX, drawY, drawWidth, drawHeight);
 

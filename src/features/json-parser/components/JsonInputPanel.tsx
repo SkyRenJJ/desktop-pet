@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { useEffect, useRef, type ChangeEvent, type MouseEvent } from "react";
 import "./JsonInputPanel.css";
 
@@ -5,6 +6,8 @@ type JsonInputPanelProps = {
   visible: boolean;
   value: string;
   errorText: string;
+  x?: number;
+  y?: number;
   onChange: (value: string) => void;
   onSubmit: () => void;
   onMouseDown: (event: MouseEvent<HTMLElement>) => void;
@@ -14,6 +17,8 @@ export function JsonInputPanel({
   visible,
   value,
   errorText,
+  x,
+  y,
   onChange,
   onSubmit,
   onMouseDown,
@@ -30,9 +35,20 @@ export function JsonInputPanel({
     onChange(event.currentTarget.value);
   };
 
+  const style: CSSProperties = {};
+
+  if (x !== undefined) {
+    style.left = `${x}px`;
+  }
+
+  if (y !== undefined) {
+    style.top = `${y}px`;
+  }
+
   return (
     <section
       className={`json-input-panel${visible ? " is-visible" : ""}`}
+      style={style}
       data-pet-interactive="true"
       onMouseDown={onMouseDown}
     >

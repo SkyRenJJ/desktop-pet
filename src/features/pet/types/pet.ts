@@ -37,8 +37,8 @@ export type MenuAnchor = {
 };
 
 export type BubbleAction = {
-  id: "json-parse";
-  label: "JSON解析";
+  id: "json-parse" | "settings";
+  label: "JSON解析" | "设置";
   offsetX: number;
   offsetY: number;
 };

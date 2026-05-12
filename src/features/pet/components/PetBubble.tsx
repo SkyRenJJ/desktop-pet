@@ -9,6 +9,7 @@ type PetBubbleProps = {
   action: BubbleAction;
   anchor: MenuAnchor;
   visible: boolean;
+  className?: string;
   onClick: () => void;
   onMouseDown: MouseEventHandler<HTMLButtonElement>;
   onPointerEnter: PointerEventHandler<HTMLButtonElement>;
@@ -19,6 +20,7 @@ export function PetBubble({
   action,
   anchor,
   visible,
+  className = "",
   onClick,
   onMouseDown,
   onPointerEnter,
@@ -34,7 +36,7 @@ export function PetBubble({
   return (
     <button
       type="button"
-      className={`pet-bubble${visible ? " is-visible" : ""}`}
+      className={`pet-bubble${visible ? " is-visible" : ""}${className ? ` ${className}` : ""}`}
       style={style}
       data-pet-action="true"
       data-pet-interactive="true"

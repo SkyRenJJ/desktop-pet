@@ -1,0 +1,104 @@
+.json-input-page {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.json-input-page .json-input-card {
+  width: 100%;
+  max-width: 296px;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(255, 247, 252, 0.98);
+  border: 1px solid rgba(245, 124, 182, 0.45);
+  box-shadow: 0 16px 34px rgba(193, 78, 132, 0.22);
+  backdrop-filter: blur(10px);
+}
+
+.json-input-page .json-input-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 8px;
+}
+
+.json-input-page .json-input-title {
+  margin: 0;
+  color: #a13071;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.json-input-page .json-input-close {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(230, 169, 198, 0.35);
+  color: #a13071;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: background 120ms;
+}
+
+.json-input-page .json-input-close:hover {
+  background: rgba(234, 102, 161, 0.5);
+  color: #fff;
+}
+
+.json-input-page .json-input-field {
+  width: 100%;
+  min-height: 132px;
+  resize: none;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid rgba(230, 169, 198, 0.72);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #5b2141;
+  font-size: 12px;
+  line-height: 1.5;
+  outline: none;
+}
+
+.json-input-page .json-input-field:focus {
+  border-color: rgba(234, 102, 161, 0.92);
+  box-shadow: 0 0 0 3px rgba(245, 139, 190, 0.14);
+}
+
+.json-input-page .json-input-footer {
+  margin-top: 8px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.json-input-page .json-input-error {
+  min-height: 16px;
+  color: #c14369;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.json-input-page .json-input-submit {
+  flex: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.5rem 0.95rem;
+  background: linear-gradient(180deg, #ff8bc2, #f15fa7);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}

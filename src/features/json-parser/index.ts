@@ -6,4 +6,9 @@ export {
 	openJsonResultWindow,
 	readStoredJsonResult,
 } from "./lib/jsonResultWindow";
+export {
+	isJsonInputWindowView,
+	openJsonInputWindow,
+	closeJsonInputWindow,
+} from "./lib/jsonInputWindow";
 export type { JsonValue, ParsedJsonResult } from "./types/jsonParser";

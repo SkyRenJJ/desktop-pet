@@ -68,8 +68,8 @@ export function getBubbleAnchor(
   const maxAnchorX = drawState.canvasWidth - bubbleRadius - PET_BUBBLE_MARGIN;
   const minAnchorY = bubbleRadius + PET_BUBBLE_MARGIN;
   const maxAnchorY = drawState.canvasHeight - bubbleRadius - PET_BUBBLE_MARGIN;
-  const preferredAnchorX = drawState.x + drawState.width / 2;
-  const preferredAnchorY = drawState.y - bubbleRadius - PET_BUBBLE_MARGIN;
+  const preferredAnchorX = drawState.centerX;
+  const preferredAnchorY = drawState.centerY;
   const anchorCanvasX = clamp(preferredAnchorX, minAnchorX, maxAnchorX);
   const anchorCanvasY = clamp(preferredAnchorY, minAnchorY, maxAnchorY);
 
