@@ -1,9 +1,11 @@
 import type { MouseEvent } from "react";
-import { LogicalSize } from "@tauri-apps/api/dpi";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { LogicalPosition, LogicalSize } from "@tauri-apps/api/dpi";
+import { currentMonitor, getCurrentWindow } from "@tauri-apps/api/window";
 import type { PetViewport } from "../types/pet";
 
-export async function syncPetWindow(viewport: PetViewport) {
+const WINDOW_MARGIN = 12;
+
+export async function ensurePetWindowVisible() {
   if (!("__TAURI_INTERNALS__" in window)) {
     return;
   }
@@ -11,10 +13,46 @@ export async function syncPetWindow(viewport: PetViewport) {
   const currentWindow = getCurrentWindow();
 
   await Promise.allSettled([
-    currentWindow.setSize(new LogicalSize(viewport.width, viewport.height)),
     currentWindow.show(),
     currentWindow.setFocus(),
   ]);
+}
+
+export async function syncPetWindow(viewport: PetViewport) {
+  if (!("__TAURI_INTERNALS__" in window)) {
+    return;
+  }
+
+  const currentWindow = getCurrentWindow();
+  const [innerSize, outerSize, scaleFactor] = await Promise.all([
+    currentWindow.innerSize(),
+    currentWindow.outerSize(),
+    currentWindow.scaleFactor(),
+  ]);
+  const logicalInnerSize = innerSize.toLogical(scaleFactor);
+  const logicalOuterSize = outerSize.toLogical(scaleFactor);
+  const widthDelta = Math.max(0, logicalOuterSize.width - logicalInnerSize.width);
+  const heightDelta = Math.max(0, logicalOuterSize.height - logicalInnerSize.height);
+  const nextWindowSize = new LogicalSize(
+    viewport.width + widthDelta,
+    viewport.height + heightDelta,
+  );
+
+  await currentWindow.setSize(nextWindowSize);
+
+  const monitor = await currentMonitor();
+
+  if (monitor) {
+    const monitorPosition = monitor.position.toLogical(monitor.scaleFactor);
+    const workAreaSize = monitor.size.toLogical(monitor.scaleFactor);
+    const nextX = monitorPosition.x + WINDOW_MARGIN;
+    const nextY =
+      monitorPosition.y + workAreaSize.height - nextWindowSize.height - WINDOW_MARGIN;
+
+    await currentWindow.setPosition(new LogicalPosition(nextX, nextY));
+  }
+
+  await ensurePetWindowVisible();
 }
 
 export function shouldStartWindowDrag(event: MouseEvent<HTMLElement>) {

@@ -33,7 +33,6 @@ pub fn run() {
                 - margin;
 
             window.set_position(PhysicalPosition::new(x, y))?;
-            window.show()?;
 
             Ok(())
         })

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "Cherry-ergouzi": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Cherry-ergouzi",
+      "options": {
+        "apiKey": "{env:OPENCODE_API_KEY_ERGOUZI}",
+        "baseURL": "https://ergouzi.life/v1"
+      },
+      "models": {
+        "gpt-5.5": {
+          "name": "gpt-5.5",
+          "reasoning": true,
+          "options": {
+            "reasoningEffort": "medium"
+          }
+        }
+      }
+    }
+  }
+}

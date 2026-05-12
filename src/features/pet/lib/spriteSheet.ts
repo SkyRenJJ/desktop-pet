@@ -1,12 +1,13 @@
 import {
   CANVAS_PADDING,
   COLOR_TOLERANCE,
+  PET_MAX_ANIMATION_RATIO,
+  PET_VIEWPORT_HEIGHT,
+  PET_VIEWPORT_WIDTH,
   SHEET_COLUMNS,
   SHEET_ROWS,
-  TRIM_PADDING,
 } from "../config/constants";
 import type {
-  Bounds,
   DrawState,
   Frame,
   PetViewport,
@@ -39,16 +40,7 @@ export function extractFrames(sprite: HTMLImageElement): Frame[] {
       const right = Math.round(((column + 1) * sprite.width) / SHEET_COLUMNS);
       const top = Math.round((row * sprite.height) / SHEET_ROWS);
       const bottom = Math.round(((row + 1) * sprite.height) / SHEET_ROWS);
-      const bounds = findForegroundBounds(
-        fullSheet.data,
-        sprite.width,
-        left,
-        top,
-        right,
-        bottom,
-        backgroundColors,
-      );
-      const paddedBounds = applyPadding(bounds, left, top, right, bottom);
+      const paddedBounds = { left, top, right, bottom };
       const frameWidth = paddedBounds.right - paddedBounds.left;
       const frameHeight = paddedBounds.bottom - paddedBounds.top;
 
@@ -94,12 +86,11 @@ export function extractFrames(sprite: HTMLImageElement): Frame[] {
 }
 
 export function getPetViewport(frames: Frame[]): PetViewport {
-  const maxFrameWidth = Math.max(...frames.map((frame) => frame.width));
-  const maxFrameHeight = Math.max(...frames.map((frame) => frame.height));
+  void frames;
 
   return {
-    width: maxFrameWidth + CANVAS_PADDING * 2,
-    height: maxFrameHeight + CANVAS_PADDING,
+    width: PET_VIEWPORT_WIDTH,
+    height: PET_VIEWPORT_HEIGHT,
   };
 }
 
@@ -110,10 +101,17 @@ export function drawFrame(
 ): DrawState {
   context.clearRect(0, 0, viewport.width, viewport.height);
 
-  const drawWidth = frame.width;
-  const drawHeight = frame.height;
-  const drawX = (viewport.width - drawWidth) / 2;
-  const drawY = viewport.height - drawHeight;
+  const maxDrawWidth = viewport.width * PET_MAX_ANIMATION_RATIO;
+  const maxDrawHeight = viewport.height * PET_MAX_ANIMATION_RATIO;
+  const drawScale = Math.min(
+    maxDrawWidth / frame.width,
+    maxDrawHeight / frame.height,
+    1,
+  );
+  const drawWidth = frame.width * drawScale;
+  const drawHeight = frame.height * drawScale;
+  const drawX = CANVAS_PADDING;
+  const drawY = viewport.height - drawHeight - CANVAS_PADDING;
 
   context.drawImage(frame.bitmap, drawX, drawY, drawWidth, drawHeight);
 
@@ -165,57 +163,6 @@ function collectBackgroundColors(
   }
 
   return colors.length > 0 ? colors : [[255, 255, 255]];
-}
-
-function findForegroundBounds(
-  data: Uint8ClampedArray,
-  sheetWidth: number,
-  left: number,
-  top: number,
-  right: number,
-  bottom: number,
-  backgroundColors: RgbColor[],
-): Bounds {
-  let minX = right;
-  let minY = bottom;
-  let maxX = left - 1;
-  let maxY = top - 1;
-
-  for (let y = top; y < bottom; y += 1) {
-    for (let x = left; x < right; x += 1) {
-      const index = (y * sheetWidth + x) * 4;
-
-      if (isBackgroundPixel(data, index, backgroundColors)) {
-        continue;
-      }
-
-      minX = Math.min(minX, x);
-      minY = Math.min(minY, y);
-      maxX = Math.max(maxX, x);
-      maxY = Math.max(maxY, y);
-    }
-  }
-
-  if (maxX < minX || maxY < minY) {
-    return { left, top, right, bottom };
-  }
-
-  return { left: minX, top: minY, right: maxX + 1, bottom: maxY + 1 };
-}
-
-function applyPadding(
-  bounds: Bounds,
-  cellLeft: number,
-  cellTop: number,
-  cellRight: number,
-  cellBottom: number,
-): Bounds {
-  return {
-    left: Math.max(cellLeft, bounds.left - TRIM_PADDING),
-    top: Math.max(cellTop, bounds.top - TRIM_PADDING),
-    right: Math.min(cellRight, bounds.right + TRIM_PADDING),
-    bottom: Math.min(cellBottom, bounds.bottom + TRIM_PADDING),
-  };
 }
 
 function removeBackground(

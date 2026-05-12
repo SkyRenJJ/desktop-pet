@@ -1,7 +1,12 @@
 export const SHEET_COLUMNS = 3;
 export const SHEET_ROWS = 3;
 export const FRAME_DURATION_MS = 120;
+export const PET_VIEWPORT_WIDTH = 360;
+export const PET_VIEWPORT_HEIGHT = 360;
 export const CANVAS_PADDING = 6;
+export const PET_MAX_ANIMATION_RATIO = 0.34;
+export const PET_BUBBLE_SIZE = 58;
+export const PET_BUBBLE_MARGIN = 10;
 export const TRIM_PADDING = 4;
 export const COLOR_TOLERANCE = 10;
 export const MENU_CLOSE_DELAY_MS = 160;

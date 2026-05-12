@@ -1,14 +1,27 @@
 import { useEffect, useState, useRef } from "react";
 import kabiSprite from "../../../assets/kabi.png";
-import { FRAME_DURATION_MS } from "../config/constants";
+import {
+  FRAME_DURATION_MS,
+  PET_VIEWPORT_HEIGHT,
+  PET_VIEWPORT_WIDTH,
+} from "../config/constants";
 import { drawFrame, extractFrames, getPetViewport } from "../lib/spriteSheet";
-import { syncPetWindow } from "../services/windowService";
+import { ensurePetWindowVisible, syncPetWindow } from "../services/windowService";
 import type { DrawState, PetViewport } from "../types/pet";
+
+const FALLBACK_VIEWPORT: PetViewport = {
+  width: PET_VIEWPORT_WIDTH,
+  height: PET_VIEWPORT_HEIGHT,
+};
 
 export function usePetAnimation() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawStateRef = useRef<DrawState | null>(null);
-  const [viewport, setViewport] = useState<PetViewport>({ width: 1, height: 1 });
+  const [viewport, setViewport] = useState<PetViewport>(FALLBACK_VIEWPORT);
+
+  useEffect(() => {
+    void ensurePetWindowVisible();
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -17,7 +30,14 @@ export function usePetAnimation() {
       return;
     }
 
-    const context = canvas.getContext("2d", { willReadFrequently: true });
+    // Try with willReadFrequently but gracefully fallback if unsupported
+    let context: CanvasRenderingContext2D | null = null;
+
+    try {
+      context = canvas.getContext("2d", { willReadFrequently: true });
+    } catch {
+      context = canvas.getContext("2d");
+    }
 
     if (!context) {
       return;
@@ -31,14 +51,42 @@ export function usePetAnimation() {
     const sprite = new Image();
     sprite.decoding = "async";
 
+    sprite.onerror = (err) => {
+      // eslint-disable-next-line no-console
+      console.error("Failed to load pet sprite:", err, "src=", sprite.src);
+    };
+
     sprite.onload = () => {
       if (disposed) {
         return;
       }
 
-      const frames = extractFrames(sprite);
+      let frames = extractFrames(sprite);
+
+      // If frame extraction failed, fall back to using the full sprite as a single frame
+      if (frames.length === 0) {
+        const frameCanvas = document.createElement("canvas");
+        frameCanvas.width = sprite.width;
+        frameCanvas.height = sprite.height;
+        const frameCtx = frameCanvas.getContext("2d");
+
+        if (frameCtx) {
+          frameCtx.drawImage(sprite, 0, 0);
+          frames = [
+            {
+              bitmap: frameCanvas,
+              width: sprite.width,
+              height: sprite.height,
+              pixels: new Uint8ClampedArray(),
+            },
+          ];
+        }
+      }
 
       if (frames.length === 0) {
+        // Nothing to draw; keep fallback viewport but log for debugging
+        // eslint-disable-next-line no-console
+        console.warn("Pet sprite loaded but no frames could be extracted.");
         return;
       }
 
@@ -70,7 +118,7 @@ export function usePetAnimation() {
         }
 
         drawStateRef.current = drawFrame(
-          context,
+          context!,
           frames[currentFrameIndex],
           nextViewport,
         );

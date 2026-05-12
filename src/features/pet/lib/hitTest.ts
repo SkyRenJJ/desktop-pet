@@ -1,5 +1,9 @@
 import type { PointerEvent } from "react";
-import { HIT_ALPHA_THRESHOLD } from "../config/constants";
+import {
+  HIT_ALPHA_THRESHOLD,
+  PET_BUBBLE_MARGIN,
+  PET_BUBBLE_SIZE,
+} from "../config/constants";
 import type { DrawState, MenuAnchor } from "../types/pet";
 
 export function getBubbleAnchor(
@@ -59,10 +63,22 @@ export function getBubbleAnchor(
   const stageRect = stageElement.getBoundingClientRect();
   const scaleX = rect.width / drawState.canvasWidth;
   const scaleY = rect.height / drawState.canvasHeight;
-  const anchorCanvasY = drawState.centerY - drawState.height * 0.08;
+  const bubbleRadius = PET_BUBBLE_SIZE / 2;
+  const minAnchorX = bubbleRadius + PET_BUBBLE_MARGIN;
+  const maxAnchorX = drawState.canvasWidth - bubbleRadius - PET_BUBBLE_MARGIN;
+  const minAnchorY = bubbleRadius + PET_BUBBLE_MARGIN;
+  const maxAnchorY = drawState.canvasHeight - bubbleRadius - PET_BUBBLE_MARGIN;
+  const preferredAnchorX = drawState.x + drawState.width / 2;
+  const preferredAnchorY = drawState.y - bubbleRadius - PET_BUBBLE_MARGIN;
+  const anchorCanvasX = clamp(preferredAnchorX, minAnchorX, maxAnchorX);
+  const anchorCanvasY = clamp(preferredAnchorY, minAnchorY, maxAnchorY);
 
   return {
-    x: Math.round(rect.left - stageRect.left + drawState.centerX * scaleX),
+    x: Math.round(rect.left - stageRect.left + anchorCanvasX * scaleX),
     y: Math.round(rect.top - stageRect.top + anchorCanvasY * scaleY),
   };
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
 }
