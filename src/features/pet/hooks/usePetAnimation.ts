@@ -1,12 +1,14 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import kabiSprite from "../../../assets/kabi.png";
 import { FRAME_DURATION_MS } from "../config/constants";
-import { drawFrame, extractFrames } from "../lib/spriteSheet";
-import type { DrawState } from "../types/pet";
+import { drawFrame, extractFrames, getPetViewport } from "../lib/spriteSheet";
+import { syncPetWindow } from "../services/windowService";
+import type { DrawState, PetViewport } from "../types/pet";
 
 export function usePetAnimation() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawStateRef = useRef<DrawState | null>(null);
+  const [viewport, setViewport] = useState<PetViewport>({ width: 1, height: 1 });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -40,9 +42,15 @@ export function usePetAnimation() {
         return;
       }
 
+      const nextViewport = getPetViewport(frames);
+      canvas.width = nextViewport.width;
+      canvas.height = nextViewport.height;
+      setViewport(nextViewport);
+      void syncPetWindow(nextViewport);
+
       let currentFrameIndex = 0;
       let lastAdvanceTime = 0;
-      drawStateRef.current = drawFrame(context, frames[currentFrameIndex]);
+      drawStateRef.current = drawFrame(context, frames[currentFrameIndex], nextViewport);
 
       const render = (timestamp: number) => {
         if (disposed) {
@@ -61,7 +69,11 @@ export function usePetAnimation() {
           lastAdvanceTime += steps * FRAME_DURATION_MS;
         }
 
-        drawStateRef.current = drawFrame(context, frames[currentFrameIndex]);
+        drawStateRef.current = drawFrame(
+          context,
+          frames[currentFrameIndex],
+          nextViewport,
+        );
         animationFrameId = window.requestAnimationFrame(render);
       };
 
@@ -76,5 +88,5 @@ export function usePetAnimation() {
     };
   }, []);
 
-  return { canvasRef, drawStateRef };
+  return { canvasRef, drawStateRef, viewport };
 }

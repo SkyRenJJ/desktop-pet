@@ -1,5 +1,5 @@
 import type { PointerEvent } from "react";
-import { CANVAS_SIZE, HIT_ALPHA_THRESHOLD } from "../config/constants";
+import { HIT_ALPHA_THRESHOLD } from "../config/constants";
 import type { DrawState, MenuAnchor } from "../types/pet";
 
 export function getBubbleAnchor(
@@ -16,8 +16,8 @@ export function getBubbleAnchor(
     return null;
   }
 
-  const canvasX = ((event.clientX - rect.left) / rect.width) * CANVAS_SIZE;
-  const canvasY = ((event.clientY - rect.top) / rect.height) * CANVAS_SIZE;
+  const canvasX = ((event.clientX - rect.left) / rect.width) * drawState.canvasWidth;
+  const canvasY = ((event.clientY - rect.top) / rect.height) * drawState.canvasHeight;
 
   if (
     canvasX < drawState.x ||
@@ -57,8 +57,8 @@ export function getBubbleAnchor(
   }
 
   const stageRect = stageElement.getBoundingClientRect();
-  const scaleX = rect.width / CANVAS_SIZE;
-  const scaleY = rect.height / CANVAS_SIZE;
+  const scaleX = rect.width / drawState.canvasWidth;
+  const scaleY = rect.height / drawState.canvasHeight;
   const anchorCanvasY = drawState.centerY - drawState.height * 0.08;
 
   return {

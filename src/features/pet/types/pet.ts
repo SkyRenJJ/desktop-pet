@@ -7,6 +7,11 @@ export type Frame = {
   pixels: Uint8ClampedArray;
 };
 
+export type PetViewport = {
+  width: number;
+  height: number;
+};
+
 export type Bounds = {
   left: number;
   top: number;
@@ -16,6 +21,8 @@ export type Bounds = {
 
 export type DrawState = {
   frame: Frame;
+  canvasWidth: number;
+  canvasHeight: number;
   x: number;
   y: number;
   width: number;

@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "identifier": "com.sky.pet",
   "build": {
-    "beforeDevCommand": "yarn dev",
+    "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "yarn build",
+    "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
   },
   "app": {
@@ -14,8 +14,8 @@
     "windows": [
       {
         "title": "t-pet",
-        "width": 360,
-        "height": 440,
+        "width": 180,
+        "height": 180,
         "center": false,
         "resizable": false,
         "maximizable": false,
@@ -24,7 +24,8 @@
         "transparent": true,
         "alwaysOnTop": true,
         "skipTaskbar": true,
-        "shadow": false
+        "shadow": false,
+        "visible": false
       }
     ],
     "security": {

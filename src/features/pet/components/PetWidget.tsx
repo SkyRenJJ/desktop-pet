@@ -1,4 +1,4 @@
-import { useEffect, type MouseEvent } from "react";
+import type { MouseEvent } from "react";
 import {
   JsonInputPanel,
   useJsonParser,
@@ -8,11 +8,7 @@ import { petBubbleAction } from "../config/bubbleAction";
 import { usePetAnimation } from "../hooks/usePetAnimation";
 import { usePetBubble } from "../hooks/usePetBubble";
 import { useStatusMessage } from "../hooks/useStatusMessage";
-import {
-  ensureTransparentWindow,
-  shouldStartWindowDrag,
-  startWindowDrag,
-} from "../services/windowService";
+import { shouldStartWindowDrag, startWindowDrag } from "../services/windowService";
 import { PetBubble } from "./PetBubble";
 import { PetCanvas } from "./PetCanvas";
 import { PetStatus } from "./PetStatus";
@@ -23,7 +19,7 @@ type PetWidgetProps = {
 };
 
 export function PetWidget({ onJsonParsed }: PetWidgetProps) {
-  const { canvasRef, drawStateRef } = usePetAnimation();
+  const { canvasRef, drawStateRef, viewport } = usePetAnimation();
   const {
     bubbleVisible,
     bubbleAnchor,
@@ -32,7 +28,7 @@ export function PetWidget({ onJsonParsed }: PetWidgetProps) {
     handleCanvasPointerLeave,
     handleBubblePointerEnter,
     handleBubblePointerLeave,
-  } = usePetBubble(drawStateRef);
+  } = usePetBubble(drawStateRef, viewport);
   const { statusText, showStatus } = useStatusMessage();
   const {
     panelVisible,
@@ -43,10 +39,6 @@ export function PetWidget({ onJsonParsed }: PetWidgetProps) {
     handleInputChange,
     submitInput,
   } = useJsonParser(onJsonParsed);
-
-  useEffect(() => {
-    void ensureTransparentWindow();
-  }, []);
 
   const handleStageMouseDown = (event: MouseEvent<HTMLElement>) => {
     if (panelVisible) {
@@ -79,7 +71,11 @@ export function PetWidget({ onJsonParsed }: PetWidgetProps) {
   };
 
   return (
-    <section className="pet-stage" onMouseDown={handleStageMouseDown}>
+    <section
+      className="pet-stage"
+      style={{ width: `${viewport.width}px`, height: `${viewport.height}px` }}
+      onMouseDown={handleStageMouseDown}
+    >
       <PetStatus text={statusText} />
 
       <JsonInputPanel
@@ -93,6 +89,7 @@ export function PetWidget({ onJsonParsed }: PetWidgetProps) {
 
       <PetCanvas
         canvasRef={canvasRef}
+        viewport={viewport}
         onPointerMove={handleCanvasPointerMove}
         onPointerLeave={handleCanvasPointerLeave}
       />

@@ -1,7 +1,5 @@
 .pet-stage {
   position: relative;
-  width: 320px;
-  height: 400px;
   overflow: visible;
   cursor: grab;
 }
@@ -12,10 +10,8 @@
 
 .pet-canvas {
   position: absolute;
-  left: 70px;
-  bottom: 20px;
-  width: 180px;
-  height: 180px;
+  left: 0;
+  bottom: 0;
   display: block;
   background: transparent;
   cursor: pointer;
@@ -23,7 +19,7 @@
 
 .pet-status {
   position: absolute;
-  top: 178px;
+  top: -18px;
   left: 50%;
   z-index: 2;
   transform: translateX(-50%);

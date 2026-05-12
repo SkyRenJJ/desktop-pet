@@ -5,23 +5,37 @@ import {
   type MutableRefObject,
   type PointerEvent,
 } from "react";
-import {
-  MENU_CLOSE_DELAY_MS,
-  STAGE_HEIGHT,
-  STAGE_WIDTH,
-} from "../config/constants";
+import { MENU_CLOSE_DELAY_MS } from "../config/constants";
 import { getBubbleAnchor } from "../lib/hitTest";
-import type { DrawState, MenuAnchor } from "../types/pet";
+import type { DrawState, MenuAnchor, PetViewport } from "../types/pet";
 
 export function usePetBubble(
   drawStateRef: MutableRefObject<DrawState | null>,
+  viewport: PetViewport,
 ) {
   const closeTimerRef = useRef<number | null>(null);
   const [bubbleVisible, setBubbleVisible] = useState(false);
   const [bubbleAnchor, setBubbleAnchor] = useState<MenuAnchor>({
-    x: STAGE_WIDTH / 2,
-    y: STAGE_HEIGHT / 2,
+    x: viewport.width / 2,
+    y: viewport.height / 2,
   });
+
+  useEffect(() => {
+    setBubbleAnchor((current) => {
+      const defaultX = Math.round(viewport.width / 2);
+      const defaultY = Math.round(viewport.height / 2);
+
+      if (bubbleVisible) {
+        return current;
+      }
+
+      if (current.x === defaultX && current.y === defaultY) {
+        return current;
+      }
+
+      return { x: defaultX, y: defaultY };
+    });
+  }, [bubbleVisible, viewport.height, viewport.width]);
 
   const clearCloseTimer = () => {
     if (closeTimerRef.current !== null) {

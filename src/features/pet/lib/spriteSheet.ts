@@ -1,12 +1,17 @@
 import {
   CANVAS_PADDING,
-  CANVAS_SIZE,
   COLOR_TOLERANCE,
   SHEET_COLUMNS,
   SHEET_ROWS,
   TRIM_PADDING,
 } from "../config/constants";
-import type { Bounds, DrawState, Frame, RgbColor } from "../types/pet";
+import type {
+  Bounds,
+  DrawState,
+  Frame,
+  PetViewport,
+  RgbColor,
+} from "../types/pet";
 
 export function extractFrames(sprite: HTMLImageElement): Frame[] {
   const sourceCanvas = document.createElement("canvas");
@@ -88,23 +93,34 @@ export function extractFrames(sprite: HTMLImageElement): Frame[] {
   return frames;
 }
 
+export function getPetViewport(frames: Frame[]): PetViewport {
+  const maxFrameWidth = Math.max(...frames.map((frame) => frame.width));
+  const maxFrameHeight = Math.max(...frames.map((frame) => frame.height));
+
+  return {
+    width: maxFrameWidth + CANVAS_PADDING * 2,
+    height: maxFrameHeight + CANVAS_PADDING,
+  };
+}
+
 export function drawFrame(
   context: CanvasRenderingContext2D,
   frame: Frame,
+  viewport: PetViewport,
 ): DrawState {
-  context.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+  context.clearRect(0, 0, viewport.width, viewport.height);
 
-  const availableSize = CANVAS_SIZE - CANVAS_PADDING * 2;
-  const scale = Math.min(availableSize / frame.width, availableSize / frame.height);
-  const drawWidth = frame.width * scale;
-  const drawHeight = frame.height * scale;
-  const drawX = (CANVAS_SIZE - drawWidth) / 2;
-  const drawY = CANVAS_SIZE - drawHeight - CANVAS_PADDING;
+  const drawWidth = frame.width;
+  const drawHeight = frame.height;
+  const drawX = (viewport.width - drawWidth) / 2;
+  const drawY = viewport.height - drawHeight;
 
   context.drawImage(frame.bitmap, drawX, drawY, drawWidth, drawHeight);
 
   return {
     frame,
+    canvasWidth: viewport.width,
+    canvasHeight: viewport.height,
     x: drawX,
     y: drawY,
     width: drawWidth,

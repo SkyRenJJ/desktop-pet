@@ -1,15 +1,19 @@
 import type { MouseEvent } from "react";
-import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { LogicalSize } from "@tauri-apps/api/dpi";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import type { PetViewport } from "../types/pet";
 
-export async function ensureTransparentWindow() {
+export async function syncPetWindow(viewport: PetViewport) {
   if (!("__TAURI_INTERNALS__" in window)) {
     return;
   }
 
+  const currentWindow = getCurrentWindow();
+
   await Promise.allSettled([
-    getCurrentWindow().setBackgroundColor([0, 0, 0, 0]),
-    getCurrentWebviewWindow().setBackgroundColor([0, 0, 0, 0]),
+    currentWindow.setSize(new LogicalSize(viewport.width, viewport.height)),
+    currentWindow.show(),
+    currentWindow.setFocus(),
   ]);
 }
 
