@@ -1,0 +1,138 @@
+.settings-page {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.settings-page .settings-card {
+  width: 100%;
+  max-width: 260px;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(255, 247, 252, 0.98);
+  border: 1px solid rgba(186, 162, 218, 0.52);
+  box-shadow: 0 16px 34px rgba(130, 82, 180, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.settings-page .settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 12px;
+  cursor: grab;
+  user-select: none;
+}
+
+.settings-page .settings-header:active {
+  cursor: grabbing;
+}
+
+.settings-page .settings-title {
+  margin: 0;
+  color: #752fb0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.settings-page .settings-close {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(200, 168, 220, 0.35);
+  color: #752fb0;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: background 120ms;
+}
+
+.settings-page .settings-close:hover {
+  background: rgba(160, 100, 210, 0.5);
+  color: #fff;
+}
+
+.settings-page .settings-body {
+  margin-bottom: 14px;
+}
+
+.settings-page .settings-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.settings-page .settings-field-label {
+  color: #5b336e;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.settings-page .settings-select {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid rgba(180, 155, 210, 0.65);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #4a2560;
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+  appearance: auto;
+}
+
+.settings-page .settings-select:focus {
+  border-color: rgba(160, 100, 210, 0.85);
+  box-shadow: 0 0 0 3px rgba(160, 100, 210, 0.1);
+}
+
+.settings-page .settings-footer {
+  display: flex;
+  gap: 8px;
+}
+
+.settings-page .settings-confirm-btn {
+  flex: 1;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(180deg, #c8a0e0, #9b5fc0);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 120ms;
+}
+
+.settings-page .settings-confirm-btn:hover {
+  filter: brightness(1.08);
+}
+
+.settings-page .settings-exit-btn {
+  flex: 1;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(180deg, #e08894, #c84a5a);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 120ms;
+}
+
+.settings-page .settings-exit-btn:hover {
+  filter: brightness(1.08);
+}

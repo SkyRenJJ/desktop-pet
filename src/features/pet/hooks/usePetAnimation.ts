@@ -100,26 +100,6 @@ export function usePetAnimation() {
       let lastAdvanceTime = 0;
       drawStateRef.current = drawFrame(context, frames[currentFrameIndex], nextViewport);
 
-      // 调试：初始绘制红色空心圆
-      {
-        const ds = drawStateRef.current;
-        if (ds) {
-          context.save();
-          context.strokeStyle = "red";
-          context.lineWidth = 2;
-          context.beginPath();
-          context.arc(ds.centerX, ds.centerY, 75, 0, Math.PI * 2);
-          context.stroke();
-          context.beginPath();
-          context.moveTo(ds.centerX - 8, ds.centerY);
-          context.lineTo(ds.centerX + 8, ds.centerY);
-          context.moveTo(ds.centerX, ds.centerY - 8);
-          context.lineTo(ds.centerX, ds.centerY + 8);
-          context.stroke();
-          context.restore();
-        }
-      }
-
       const render = (timestamp: number) => {
         if (disposed) {
           return;
@@ -142,25 +122,6 @@ export function usePetAnimation() {
           frames[currentFrameIndex],
           nextViewport,
         );
-
-        // 调试：动画中心红色空心圆
-        const ds = drawStateRef.current;
-        if (ds) {
-          context!.save();
-          context!.strokeStyle = "red";
-          context!.lineWidth = 2;
-          context!.beginPath();
-          context!.arc(ds.centerX, ds.centerY, 75, 0, Math.PI * 2);
-          context!.stroke();
-          // 中心十字标记
-          context!.beginPath();
-          context!.moveTo(ds.centerX - 8, ds.centerY);
-          context!.lineTo(ds.centerX + 8, ds.centerY);
-          context!.moveTo(ds.centerX, ds.centerY - 8);
-          context!.lineTo(ds.centerX, ds.centerY + 8);
-          context!.stroke();
-          context!.restore();
-        }
 
         animationFrameId = window.requestAnimationFrame(render);
       };

@@ -25,6 +25,12 @@
   align-items: center;
   justify-content: space-between;
   margin: 0 0 8px;
+  cursor: grab;
+  user-select: none;
+}
+
+.json-input-page .json-input-header:active {
+  cursor: grabbing;
 }
 
 .json-input-page .json-input-title {

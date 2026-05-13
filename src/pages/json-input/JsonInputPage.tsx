@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { emitTo } from "@tauri-apps/api/event";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { parseJsonInput } from "../../features/json-parser/lib/parseJsonInput";
 import { closeJsonInputWindow } from "../../features/json-parser/lib/jsonInputWindow";
 import type { ParsedJsonResult } from "../../features/json-parser/types/jsonParser";
@@ -41,6 +42,14 @@ export function JsonInputPage() {
     }
   }, [handleSubmit]);
 
+  const handleHeaderMouseDown = useCallback(() => {
+    if (!("__TAURI_INTERNALS__" in window)) {
+      return;
+    }
+
+    void getCurrentWindow().startDragging();
+  }, []);
+
   useEffect(() => {
     textareaRef.current?.focus();
   }, []);
@@ -48,7 +57,10 @@ export function JsonInputPage() {
   return (
     <main className="json-input-page">
       <div className="json-input-card">
-        <div className="json-input-header">
+        <div
+          className="json-input-header"
+          onMouseDown={handleHeaderMouseDown}
+        >
           <p className="json-input-title">JSON解析</p>
           <button
             type="button"
