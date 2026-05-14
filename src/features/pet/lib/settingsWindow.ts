@@ -1,5 +1,6 @@
 import { LogicalPosition } from "@tauri-apps/api/dpi";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { readAlwaysOnTop } from "../services/windowService";
 
 const SETTINGS_WINDOW_LABEL = "settings";
 const SETTINGS_VIEW = "settings";
@@ -61,7 +62,7 @@ export async function openSettingsWindow(anchor: SettingsWindowAnchor) {
     resizable: false,
     decorations: false,
     transparent: true,
-    alwaysOnTop: true,
+    alwaysOnTop: readAlwaysOnTop(),
     focus: true,
     visible: false,
   });

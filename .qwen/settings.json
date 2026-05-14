@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(npx *)",
-      "Read(C:\\Users\\11923\\AppData\\Roaming\\CherryStudio\\Data\\Skills/**)"
+      "Read(C:\\Users\\11923\\AppData\\Roaming\\CherryStudio\\Data\\Skills/**)",
+      "Bash(mkdir)"
     ]
   },
   "tools": {

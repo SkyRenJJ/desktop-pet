@@ -1,4 +1,5 @@
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { readAlwaysOnTop } from "../../pet/services/windowService";
 
 const JSON_INPUT_WINDOW_LABEL = "json-input";
 const JSON_INPUT_VIEW = "json-input";
@@ -56,7 +57,7 @@ export async function openJsonInputWindow() {
     resizable: false,
     decorations: false,
     transparent: true,
-    alwaysOnTop: true,
+    alwaysOnTop: readAlwaysOnTop(),
     focus: true,
   });
 

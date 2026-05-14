@@ -1,4 +1,5 @@
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { readAlwaysOnTop } from "../../pet/services/windowService";
 import type { ParsedJsonResult } from "../types/jsonParser";
 
 const JSON_RESULT_WINDOW_LABEL = "json-result";
@@ -77,7 +78,7 @@ export async function openJsonResultWindow(result: ParsedJsonResult) {
     resizable: true,
     decorations: false,
     transparent: false,
-    alwaysOnTop: false,
+    alwaysOnTop: readAlwaysOnTop(),
     focus: true,
   });
 

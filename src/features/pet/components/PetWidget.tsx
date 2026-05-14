@@ -3,13 +3,13 @@ import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import type { ParsedJsonResult } from "../../json-parser";
-import { openJsonInputWindow } from "../../json-parser";
-import { petBubbleAction, petSettingsAction } from "../config/bubbleAction";
+import { petFeaturesAction, petSettingsAction } from "../config/bubbleAction";
 import { usePetAnimation } from "../hooks/usePetAnimation";
 import { usePetBubble } from "../hooks/usePetBubble";
 import { useStatusMessage } from "../hooks/useStatusMessage";
 import { openSettingsWindow } from "../lib/settingsWindow";
-import { shouldStartWindowDrag, startWindowDrag, moveToDisplayPosition } from "../services/windowService";
+import { openFeaturesWindow } from "../lib/featuresWindow";
+import { shouldStartWindowDrag, startWindowDrag, moveToDisplayPosition, applyAlwaysOnTop, readAlwaysOnTop } from "../services/windowService";
 import { PetBubble } from "./PetBubble";
 import { PetCanvas } from "./PetCanvas";
 import { PetStatus } from "./PetStatus";
@@ -38,8 +38,12 @@ export function PetWidget({ onJsonParsed }: PetWidgetProps) {
     let unlistenJson: UnlistenFn | undefined;
     let unlistenPosition: UnlistenFn | undefined;
     let unlistenTrayJson: UnlistenFn | undefined;
+    let unlistenAlwaysOnTop: UnlistenFn | undefined;
 
     const setupListeners = async () => {
+      // Apply initial alwaysOnTop from persisted setting
+      void applyAlwaysOnTop(readAlwaysOnTop());
+
       unlistenJson = await listen<ParsedJsonResult>("json-input-submitted", (event) => {
         onJsonParsedRef.current(event.payload);
       });
@@ -51,7 +55,11 @@ export function PetWidget({ onJsonParsed }: PetWidgetProps) {
       });
 
       unlistenTrayJson = await listen("tray-open-json-input", () => {
-        void openJsonInputWindow();
+        void openFeaturesWindow("json-parse");
+      });
+
+      unlistenAlwaysOnTop = await listen<boolean>("settings-always-on-top-changed", (event) => {
+        void applyAlwaysOnTop(event.payload);
       });
     };
 
@@ -66,6 +74,9 @@ export function PetWidget({ onJsonParsed }: PetWidgetProps) {
       }
       if (unlistenTrayJson) {
         unlistenTrayJson();
+      }
+      if (unlistenAlwaysOnTop) {
+        unlistenAlwaysOnTop();
       }
     };
   }, []);
@@ -82,10 +93,10 @@ export function PetWidget({ onJsonParsed }: PetWidgetProps) {
     event.stopPropagation();
   };
 
-  const handleBubbleClick = () => {
+  const handleFeaturesClick = useCallback(async () => {
     hideBubble();
-    void openJsonInputWindow();
-  };
+    await openFeaturesWindow();
+  }, [hideBubble]);
 
   const handleSettingsClick = useCallback(async () => {
     hideBubble();
@@ -136,13 +147,13 @@ export function PetWidget({ onJsonParsed }: PetWidgetProps) {
 
       <div className="pet-bubble-layer">
         <PetBubble
-          action={petBubbleAction}
+          action={petFeaturesAction}
           anchor={bubbleAnchor}
           visible={bubbleVisible}
           onMouseDown={handleBubbleMouseDown}
           onPointerEnter={handleBubblePointerEnter}
           onPointerLeave={handleBubblePointerLeave}
-          onClick={handleBubbleClick}
+          onClick={handleFeaturesClick}
         />
         <PetBubble
           action={petSettingsAction}

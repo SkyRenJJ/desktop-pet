@@ -41,6 +41,33 @@
   letter-spacing: 0.06em;
 }
 
+.settings-page .settings-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.settings-page .settings-minimize {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(200, 168, 220, 0.35);
+  color: #752fb0;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: background 120ms;
+}
+
+.settings-page .settings-minimize:hover {
+  background: rgba(160, 100, 210, 0.5);
+  color: #fff;
+}
+
 .settings-page .settings-close {
   flex: none;
   width: 20px;
@@ -73,11 +100,47 @@
   gap: 10px;
 }
 
+.settings-page .settings-field--toggle {
+  margin-top: 12px;
+}
+
 .settings-page .settings-field-label {
   color: #5b336e;
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
+}
+
+.settings-page .settings-toggle {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(180, 155, 210, 0.45);
+  cursor: pointer;
+  transition: background 200ms;
+}
+
+.settings-page .settings-toggle--on {
+  background: rgba(160, 100, 210, 0.8);
+}
+
+.settings-page .settings-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: transform 200ms;
+}
+
+.settings-page .settings-toggle--on .settings-toggle-thumb {
+  transform: translateX(18px);
 }
 
 .settings-page .settings-select {

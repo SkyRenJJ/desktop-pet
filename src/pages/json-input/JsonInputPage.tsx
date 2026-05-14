@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { emitTo } from "@tauri-apps/api/event";
+import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { invoke } from "@tauri-apps/api/core";
 import { parseJsonInput } from "../../features/json-parser/lib/parseJsonInput";
 import { closeJsonInputWindow } from "../../features/json-parser/lib/jsonInputWindow";
 import type { ParsedJsonResult } from "../../features/json-parser/types/jsonParser";
@@ -54,6 +56,19 @@ export function JsonInputPage() {
     textareaRef.current?.focus();
   }, []);
 
+  // Listen for always-on-top changes
+  useEffect(() => {
+    const unlisten = listen<boolean>("settings-always-on-top-changed", (event) => {
+      if ("__TAURI_INTERNALS__" in window) {
+        void invoke("set_always_on_top", { onTop: event.payload });
+      }
+    });
+
+    return () => {
+      void unlisten.then((fn) => fn());
+    };
+  }, []);
+
   return (
     <main className="json-input-page">
       <div className="json-input-card">
@@ -62,14 +77,25 @@ export function JsonInputPage() {
           onMouseDown={handleHeaderMouseDown}
         >
           <p className="json-input-title">JSON解析</p>
-          <button
-            type="button"
-            className="json-input-close"
-            onMouseDown={(e) => e.stopPropagation()}
-            onClick={() => void closeJsonInputWindow()}
-          >
-            ✕
-          </button>
+          <div className="json-input-header-actions">
+            <button
+              type="button"
+              className="json-input-minimize"
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={() => void getCurrentWindow().minimize()}
+              aria-label="最小化"
+            >
+              ─
+            </button>
+            <button
+              type="button"
+              className="json-input-close"
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={() => void closeJsonInputWindow()}
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         <textarea

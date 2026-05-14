@@ -1,3 +1,4 @@
+import { invoke } from "@tauri-apps/api/core";
 import type { MouseEvent } from "react";
 import { LogicalPosition, LogicalSize } from "@tauri-apps/api/dpi";
 import { currentMonitor, getCurrentWindow } from "@tauri-apps/api/window";
@@ -6,6 +7,7 @@ import type { PetViewport } from "../types/pet";
 const WINDOW_MARGIN = 12;
 const POSITION_STORAGE_KEY = "t-pet:window-position";
 const DISPLAY_POSITION_KEY = "t-pet:display-position";
+export const ALWAYS_ON_TOP_KEY = "t-pet:always-on-top";
 
 type DisplayPosition = "bottom-left" | "bottom-right" | "top-left" | "top-right";
 
@@ -57,6 +59,30 @@ function readDisplayPosition(): DisplayPosition {
   }
 
   return "bottom-left";
+}
+
+export function readAlwaysOnTop(): boolean {
+  try {
+    const raw = localStorage.getItem(ALWAYS_ON_TOP_KEY);
+    if (raw !== null) {
+      return raw === "true";
+    }
+  } catch {
+    // ignore
+  }
+  return false;
+}
+
+export async function applyAlwaysOnTop(onTop: boolean) {
+  try {
+    localStorage.setItem(ALWAYS_ON_TOP_KEY, String(onTop));
+  } catch {
+    // ignore
+  }
+
+  if ("__TAURI_INTERNALS__" in window) {
+    await invoke("set_always_on_top", { onTop });
+  }
 }
 
 function computeDefaultPosition(

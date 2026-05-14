@@ -1,8 +1,8 @@
 import type { BubbleAction } from "../types/pet";
 
-export const petBubbleAction: BubbleAction = {
-  id: "json-parse",
-  label: "JSON解析",
+export const petFeaturesAction: BubbleAction = {
+  id: "features",
+  label: "功能",
   offsetX: -59,
   offsetY: -46,
 };

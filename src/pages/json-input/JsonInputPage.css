@@ -41,6 +41,33 @@
   letter-spacing: 0.06em;
 }
 
+.json-input-page .json-input-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.json-input-page .json-input-minimize {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(230, 169, 198, 0.35);
+  color: #a13071;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: background 120ms;
+}
+
+.json-input-page .json-input-minimize:hover {
+  background: rgba(234, 102, 161, 0.5);
+  color: #fff;
+}
+
 .json-input-page .json-input-close {
   flex: none;
   width: 20px;

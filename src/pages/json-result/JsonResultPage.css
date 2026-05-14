@@ -53,6 +53,34 @@
   line-height: 1.1;
 }
 
+.json-result-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.json-result-minimize {
+  border: 0;
+  border-radius: 999px;
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(230, 169, 198, 0.4);
+  color: #a13071;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 120ms;
+}
+
+.json-result-minimize:hover {
+  background: rgba(234, 102, 161, 0.6);
+  color: #fff;
+}
+
 .json-result-close {
   border: 0;
   border-radius: 999px;
