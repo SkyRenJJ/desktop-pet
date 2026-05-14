@@ -22,7 +22,7 @@ interface FeatureEntry {
 
 const FEATURES: FeatureEntry[] = [
   { id: "json-parse", label: "JSON解析", category: "开发工具" },
-  { id: "photo-1inch", label: "一寸照片生成", category: "实用工具" },
+  { id: "photo-1inch", label: "照片处理工具", category: "实用工具" },
 ];
 
 /** FEATURES grouped by category, in insertion order. */
