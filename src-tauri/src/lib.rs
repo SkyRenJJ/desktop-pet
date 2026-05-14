@@ -45,6 +45,57 @@ async fn set_all_always_on_top(app: tauri::AppHandle, on_top: bool) -> Result<()
     Ok(())
 }
 
+#[tauri::command]
+fn save_file(path: String, data: String) -> Result<(), String> {
+    let bytes = base64_decode(&data).map_err(|e| format!("Base64 decode failed: {}", e))?;
+    std::fs::write(&path, &bytes).map_err(|e| format!("Failed to write file: {}", e))
+}
+
+fn base64_decode(input: &str) -> Result<Vec<u8>, String> {
+    use std::collections::HashMap;
+
+    let alphabet: Vec<char> =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+            .chars()
+            .collect();
+    let mut lookup = HashMap::new();
+    for (i, &c) in alphabet.iter().enumerate() {
+        lookup.insert(c, i as u8);
+    }
+
+    let input = input.trim_end_matches('=');
+    let mut output = Vec::with_capacity(input.len() * 3 / 4);
+    let chars: Vec<char> = input.chars().collect();
+
+    for chunk in chars.chunks(4) {
+        let mut buf = 0u32;
+        let mut count = 0;
+
+        for (i, &c) in chunk.iter().enumerate() {
+            if c == '=' {
+                break;
+            }
+            let val = lookup
+                .get(&c)
+                .ok_or_else(|| format!("Invalid base64 character: {}", c))?;
+            buf |= (*val as u32) << (18 - i * 6);
+            count += 1;
+        }
+
+        if count >= 2 {
+            output.push((buf >> 16) as u8);
+        }
+        if count >= 3 {
+            output.push((buf >> 8) as u8);
+        }
+        if count >= 4 {
+            output.push(buf as u8);
+        }
+    }
+
+    Ok(output)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -145,7 +196,8 @@ pub fn run() {
             Ok(())
         })
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet, exit_app, show_pet_context_menu, set_always_on_top, set_all_always_on_top])
+        .plugin(tauri_plugin_dialog::init())
+        .invoke_handler(tauri::generate_handler![greet, exit_app, show_pet_context_menu, set_always_on_top, set_all_always_on_top, save_file])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

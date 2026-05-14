@@ -19,6 +19,8 @@
     "core:webview:allow-create-webview-window",
     "core:event:allow-listen",
     "core:event:allow-emit-to",
+    "dialog:default",
+    "dialog:allow-save",
     "opener:default"
   ]
 }

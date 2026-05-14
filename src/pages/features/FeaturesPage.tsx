@@ -3,6 +3,7 @@ import { emitTo } from "@tauri-apps/api/event";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api/core";
+import { save } from "@tauri-apps/plugin-dialog";
 import { closeFeaturesWindow } from "../../features/pet/lib/featuresWindow";
 import { parseJsonInput } from "../../features/json-parser/lib/parseJsonInput";
 import { JsonTree } from "../../features/json-parser";
@@ -11,16 +12,35 @@ import "./FeaturesPage.css";
 
 // --- feature registry ---
 
-type FeatureId = "json-parse";
+type FeatureId = "json-parse" | "photo-1inch";
 
 interface FeatureEntry {
   id: FeatureId;
   label: string;
+  category: string;
 }
 
 const FEATURES: FeatureEntry[] = [
-  { id: "json-parse", label: "JSON解析" },
+  { id: "json-parse", label: "JSON解析", category: "开发工具" },
+  { id: "photo-1inch", label: "一寸照片生成", category: "实用工具" },
 ];
+
+/** FEATURES grouped by category, in insertion order. */
+function groupByCategory(features: FeatureEntry[]): Map<string, FeatureEntry[]> {
+  const map = new Map<string, FeatureEntry[]>();
+
+  for (const f of features) {
+    const group = map.get(f.category);
+
+    if (group) {
+      group.push(f);
+    } else {
+      map.set(f.category, [f]);
+    }
+  }
+
+  return map;
+}
 
 const MAIN_WINDOW_LABEL = "main";
 
@@ -122,12 +142,382 @@ function JsonParseWorkArea() {
   );
 }
 
+// --- Photo 1-inch work area ---
+
+type PhotoSize =
+  | "1inch"
+  | "2inch"
+  | "large-1inch"
+  | "small-1inch"
+  | "large-2inch"
+  | "small-2inch"
+  | "resume"
+  | "cet"
+  | "psc";
+
+interface PhotoSizeSpec {
+  label: string;
+  /** physical size description, e.g. "25×35mm" */
+  physical: string;
+  width: number;
+  height: number;
+}
+
+const PHOTO_SIZES: Record<PhotoSize, PhotoSizeSpec> = {
+  "1inch":      { label: "1寸",       physical: "25×35mm", width: 295, height: 413 },
+  "small-1inch": { label: "小一寸",   physical: "22×32mm", width: 260, height: 378 },
+  "large-1inch": { label: "大一寸",   physical: "33×48mm", width: 390, height: 567 },
+  "2inch":      { label: "2寸",       physical: "35×49mm", width: 413, height: 579 },
+  "small-2inch": { label: "小二寸",   physical: "35×45mm", width: 413, height: 531 },
+  "large-2inch": { label: "大二寸",   physical: "35×53mm", width: 413, height: 626 },
+  "resume":     { label: "简历照",    physical: "25×35mm", width: 295, height: 413 },
+  "cet":        { label: "四六级照",  physical: "25×35mm", width: 295, height: 413 },
+  "psc":        { label: "普通话照",  physical: "25×35mm", width: 295, height: 413 },
+};
+
+interface ProcessResult {
+  blob: Blob;
+  sourceWidth: number;
+  sourceHeight: number;
+}
+
+async function processPhoto(
+  imageUrl: string,
+  spec: PhotoSizeSpec,
+  quality: number,
+  onProgress: (pct: number) => void,
+): Promise<ProcessResult> {
+  await new Promise((r) => setTimeout(r, 60));
+  onProgress(10);
+
+  const img = new Image();
+  img.src = imageUrl;
+  await new Promise<void>((resolve, reject) => {
+    img.onload = () => resolve();
+    img.onerror = () => reject(new Error("Failed to load image"));
+  });
+
+  onProgress(30);
+
+  const scale = 2;
+  const canvas = document.createElement("canvas");
+  canvas.width = spec.width * scale;
+  canvas.height = spec.height * scale;
+
+  const ctx = canvas.getContext("2d")!;
+  const targetRatio = spec.width / spec.height;
+  const imgRatio = img.naturalWidth / img.naturalHeight;
+
+  let sx: number, sy: number, sw: number, sh: number;
+
+  if (imgRatio > targetRatio) {
+    sh = img.naturalHeight;
+    sw = img.naturalHeight * targetRatio;
+    sx = (img.naturalWidth - sw) / 2;
+    sy = 0;
+  } else {
+    sw = img.naturalWidth;
+    sh = img.naturalWidth / targetRatio;
+    sx = 0;
+    sy = (img.naturalHeight - sh) / 2;
+  }
+
+  onProgress(60);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+
+  onProgress(85);
+
+  return new Promise<ProcessResult>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) {
+        onProgress(95);
+        resolve({
+          blob,
+          sourceWidth: img.naturalWidth,
+          sourceHeight: img.naturalHeight,
+        });
+      } else {
+        reject(new Error("Failed to encode image"));
+      }
+    }, "image/jpeg", quality);
+  });
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function Photo1InchWorkArea() {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [fileName, setFileName] = useState("");
+  const [selectedSize, setSelectedSize] = useState<PhotoSize>("1inch");
+  const [resultUrl, setResultUrl] = useState<string | null>(null);
+  const [processing, setProcessing] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [quality, setQuality] = useState(0.92);
+  const [sourceFileSize, setSourceFileSize] = useState(0);
+  const [sourceDims, setSourceDims] = useState<{ w: number; h: number } | null>(null);
+  const [resultFileSize, setResultFileSize] = useState(0);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const resultBlobRef = useRef<Blob | null>(null);
+  const processingIdRef = useRef(0);
+
+  const resultDims = PHOTO_SIZES[selectedSize];
+
+  const handleSelectFile = useCallback(() => {
+    inputRef.current?.click();
+  }, []);
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.currentTarget.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    if (resultUrl) {
+      URL.revokeObjectURL(resultUrl);
+    }
+
+    setFileName(file.name);
+    setSourceFileSize(file.size);
+    setPreviewUrl(URL.createObjectURL(file));
+    setResultUrl(null);
+    setSourceDims(null);
+    setResultFileSize(0);
+    resultBlobRef.current = null;
+
+    e.currentTarget.value = "";
+  }, [previewUrl, resultUrl]);
+
+  // Auto-process when photo, size or quality changes
+  useEffect(() => {
+    if (!previewUrl) return;
+
+    const id = ++processingIdRef.current;
+
+    setProcessing(true);
+    setProgress(0);
+
+    processPhoto(previewUrl, PHOTO_SIZES[selectedSize], quality, (pct) => {
+      if (processingIdRef.current === id) {
+        setProgress(pct);
+      }
+    })
+      .then((result) => {
+        if (processingIdRef.current !== id) return;
+
+        resultBlobRef.current = result.blob;
+        if (resultUrl) URL.revokeObjectURL(resultUrl);
+        setResultUrl(URL.createObjectURL(result.blob));
+        setSourceDims({ w: result.sourceWidth, h: result.sourceHeight });
+        setResultFileSize(result.blob.size);
+        setProgress(100);
+        setProcessing(false);
+      })
+      .catch(() => {
+        if (processingIdRef.current !== id) return;
+        setProcessing(false);
+      });
+  }, [previewUrl, selectedSize, quality]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleExport = useCallback(async () => {
+    const blob = resultBlobRef.current;
+    if (!blob) return;
+
+    const spec = PHOTO_SIZES[selectedSize];
+    const baseName = fileName.replace(/\.[^.]+$/, "") || "photo";
+    const defaultName = `${baseName}_${spec.label}.jpg`;
+
+    // Convert blob to base64
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        // Strip the "data:image/jpeg;base64," prefix
+        resolve(result.slice(result.indexOf(",") + 1));
+      };
+      reader.onerror = () => reject(new Error("Failed to read image data"));
+      reader.readAsDataURL(blob);
+    });
+
+    const filePath = await save({
+      defaultPath: defaultName,
+      filters: [{ name: "JPEG Image", extensions: ["jpg", "jpeg"] }],
+    });
+
+    if (!filePath) return; // user cancelled
+
+    await invoke("save_file", { path: filePath, data: base64 });
+  }, [fileName, selectedSize]);
+
+  // Cleanup object URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      if (resultUrl) URL.revokeObjectURL(resultUrl);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="features-work-photo">
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="features-photo-input-hidden"
+        onChange={handleFileChange}
+      />
+
+      {previewUrl ? (
+        <>
+          <div className="features-photo-panels">
+            <div className="features-photo-source">
+              <p className="features-photo-panel-label">原图</p>
+              <div className="features-photo-img-wrap">
+                <img
+                  src={previewUrl}
+                  alt={fileName}
+                  className="features-photo-source-img"
+                />
+              </div>
+              <div className="features-photo-info">
+                {sourceDims ? (
+                  <span>{sourceDims.w} × {sourceDims.h}</span>
+                ) : (
+                  <span className="features-photo-info-placeholder">—</span>
+                )}
+                <span className="features-photo-info-sep">|</span>
+                <span>{formatFileSize(sourceFileSize)}</span>
+              </div>
+            </div>
+
+            <div className="features-photo-result">
+              <p className="features-photo-panel-label">结果</p>
+              <div className="features-photo-img-wrap">
+                {processing ? (
+                  <div className="features-photo-progress">
+                    <div className="features-photo-progress-bar">
+                      <div
+                        className="features-photo-progress-fill"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                    <span className="features-photo-progress-text">
+                      处理中 {progress}%
+                    </span>
+                  </div>
+                ) : resultUrl ? (
+                  <img
+                    src={resultUrl}
+                    alt="处理结果"
+                    className="features-photo-result-img"
+                  />
+                ) : (
+                  <span className="features-photo-result-placeholder">
+                    处理中...
+                  </span>
+                )}
+              </div>
+              <div className="features-photo-info">
+                <span>{resultDims.width} × {resultDims.height}（{resultDims.physical}）</span>
+                <span className="features-photo-info-sep">|</span>
+                {resultFileSize > 0 ? (
+                  <span>{formatFileSize(resultFileSize)}</span>
+                ) : (
+                  <span className="features-photo-info-placeholder">—</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="features-photo-footer">
+            <div className="features-photo-footer-top">
+              <div className="features-photo-sizes">
+                {(Object.keys(PHOTO_SIZES) as PhotoSize[]).map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    className={`features-photo-size-btn${selectedSize === size ? " is-active" : ""}`}
+                    disabled={processing}
+                    onClick={() => setSelectedSize(size)}
+                  >
+                    {PHOTO_SIZES[size].label}
+                  </button>
+                ))}
+              </div>
+              <div className="features-photo-footer-actions">
+                <button
+                  type="button"
+                  className="features-photo-select-btn"
+                  disabled={processing}
+                  onClick={handleSelectFile}
+                >
+                  重新选择
+                </button>
+                <button
+                  type="button"
+                  className="features-photo-confirm-btn"
+                  disabled={processing || !resultUrl}
+                  onClick={handleExport}
+                >
+                  导出
+                </button>
+              </div>
+            </div>
+            <div className="features-photo-quality">
+              <label className="features-photo-quality-label">
+                压缩质量
+                <span className="features-photo-quality-value">
+                  {Math.round(quality * 100)}%
+                </span>
+              </label>
+              <input
+                type="range"
+                className="features-photo-quality-slider"
+                min={0.1}
+                max={1}
+                step={0.05}
+                value={quality}
+                disabled={processing}
+                onChange={(e) => setQuality(Number(e.currentTarget.value))}
+              />
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="features-photo-empty">
+          <p className="features-photo-empty-text">请选择一张照片</p>
+          <button
+            type="button"
+            className="features-photo-select-btn"
+            onClick={handleSelectFile}
+          >
+            选择照片
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // --- work area router ---
 
 function WorkArea({ feature }: { feature: FeatureId }) {
   switch (feature) {
     case "json-parse":
       return <JsonParseWorkArea />;
+    case "photo-1inch":
+      return <Photo1InchWorkArea />;
     default:
       return null;
   }
@@ -248,15 +638,20 @@ export function FeaturesPage() {
             className="features-sidebar"
             style={{ width: `${sidebarRatio * 100}%` }}
           >
-            {FEATURES.map((f) => (
-              <button
-                key={f.id}
-                type="button"
-                className={`features-nav-item${activeFeature === f.id ? " is-active" : ""}`}
-                onClick={() => setActiveFeature(f.id)}
-              >
-                {f.label}
-              </button>
+            {Array.from(groupByCategory(FEATURES).entries()).map(([category, entries]) => (
+              <div key={category} className="features-category">
+                <p className="features-category-label">{category}</p>
+                {entries.map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    className={`features-nav-item${activeFeature === f.id ? " is-active" : ""}`}
+                    onClick={() => setActiveFeature(f.id)}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
             ))}
           </nav>
 
