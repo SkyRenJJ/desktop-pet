@@ -1,0 +1,217 @@
+.timestamp-work {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+  padding: 20px 24px;
+  box-sizing: border-box;
+  gap: 18px;
+  overflow-y: auto;
+}
+
+/* --- live clock --- */
+
+.ts-live-clock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 18px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(180, 140, 220, 0.15), rgba(140, 200, 230, 0.12));
+  border: 1px solid rgba(186, 162, 218, 0.35);
+}
+
+.ts-live-time-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ts-live-time {
+  font-size: 24px;
+  font-weight: 700;
+  color: #3e1f54;
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  letter-spacing: 0.03em;
+}
+
+.ts-live-stamps {
+  display: flex;
+  gap: 24px;
+}
+
+.ts-live-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* --- copy button --- */
+
+.ts-copy-btn {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms, background 120ms;
+}
+
+.ts-live-time-row:hover .ts-copy-btn,
+.ts-live-row:hover .ts-copy-btn {
+  opacity: 1;
+}
+
+.ts-copy-btn:hover {
+  background: rgba(160, 100, 210, 0.12);
+}
+
+.ts-copy-btn:active {
+  background: rgba(160, 100, 210, 0.2);
+}
+
+.ts-copy-btn::after {
+  content: "";
+  display: block;
+  width: 14px;
+  height: 14px;
+  margin: 0 auto;
+  background: #a080b8;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Crect x='9' y='9' width='13' height='13' rx='2'/%3E%3Cpath d='M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1'/%3E%3C/svg%3E") center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Crect x='9' y='9' width='13' height='13' rx='2'/%3E%3Cpath d='M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.ts-live-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #a080b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ts-live-value {
+  font-size: 13px;
+  color: #5b336e;
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+}
+
+/* --- sections --- */
+
+.ts-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(186, 162, 218, 0.3);
+}
+
+.ts-section-header {
+  font-size: 13px;
+  font-weight: 700;
+  color: #752fb0;
+  letter-spacing: 0.03em;
+}
+
+/* --- inputs --- */
+
+.ts-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ts-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid rgba(186, 162, 218, 0.4);
+  border-radius: 8px;
+  background: rgba(245, 240, 252, 0.5);
+  color: #3e1f54;
+  font-size: 14px;
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  outline: none;
+  transition: border-color 120ms;
+}
+
+.ts-input:focus {
+  border-color: rgba(160, 100, 210, 0.6);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.ts-input::placeholder {
+  color: #b8a0c8;
+  font-family: inherit;
+}
+
+/* --- unit badge --- */
+
+.ts-unit-badge {
+  flex: none;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.ts-unit-s {
+  background: rgba(130, 180, 220, 0.18);
+  color: #3a6d99;
+}
+
+.ts-unit-ms {
+  background: rgba(200, 160, 220, 0.2);
+  color: #7b4d99;
+}
+
+/* --- results --- */
+
+.ts-result {
+  font-size: 18px;
+  font-weight: 600;
+  color: #3e1f54;
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: rgba(160, 100, 210, 0.06);
+  word-break: break-all;
+}
+
+.ts-result-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: rgba(160, 100, 210, 0.06);
+}
+
+.ts-result-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ts-result-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #7b5a90;
+  flex: none;
+  width: 36px;
+}
+
+.ts-result-value {
+  font-size: 14px;
+  color: #3e1f54;
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  word-break: break-all;
+  user-select: all;
+}

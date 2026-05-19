@@ -4,7 +4,14 @@
       "Bash(npm ls *)",
       "Bash(npm install *)",
       "Bash(cargo add *)",
-      "Bash(cargo check *)"
+      "Bash(cargo check *)",
+      "Bash(npx tsc *)",
+      "Bash(xargs grep -l -i \"clipboard\")",
+      "WebSearch",
+      "Bash(cargo search *)",
+      "Bash(npm add *)",
+      "Bash(xargs grep -l \"clipboard-history\")",
+      "Bash(npm run *)"
     ]
   }
 }

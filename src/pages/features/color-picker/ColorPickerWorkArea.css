@@ -1,0 +1,180 @@
+.color-picker-work {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 0;
+  padding: 24px 16px;
+  box-sizing: border-box;
+  gap: 20px;
+}
+
+/* --- color board --- */
+
+.color-picker-board {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.color-picker-canvas {
+  border-radius: 50%;
+  cursor: crosshair;
+  box-shadow:
+    0 0 0 4px rgba(186, 162, 218, 0.25),
+    0 8px 28px rgba(130, 82, 180, 0.18);
+}
+
+/* --- result panel --- */
+
+.color-picker-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(186, 162, 218, 0.45);
+  border-radius: 12px;
+  padding: 16px 20px;
+  min-width: 260px;
+  box-shadow: 0 4px 14px rgba(130, 82, 180, 0.08);
+}
+
+/* preview swatch + hex */
+
+.color-picker-preview-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.color-picker-preview {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid rgba(186, 162, 218, 0.4);
+  flex: none;
+}
+
+.color-picker-hex-input-wrap {
+  position: relative;
+}
+
+.color-picker-hex-input {
+  width: 130px;
+  padding: 6px 10px;
+  border: 1px solid rgba(186, 162, 218, 0.4);
+  border-radius: 8px;
+  background: rgba(245, 240, 252, 0.5);
+  color: #3e1f54;
+  font-size: 18px;
+  font-weight: 700;
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  outline: none;
+  transition: border-color 120ms;
+}
+
+.color-picker-hex-input:focus {
+  border-color: rgba(160, 100, 210, 0.65);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+/* value rows */
+
+.color-picker-values {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 4px;
+}
+
+.color-picker-value-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+
+.color-picker-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #7b5a90;
+  letter-spacing: 0.04em;
+  flex: none;
+  width: 28px;
+}
+
+.color-picker-value-input {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: #5b336e;
+  font-size: 13px;
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  outline: none;
+  transition: border-color 120ms, background 120ms;
+}
+
+.color-picker-value-input:focus {
+  border-color: rgba(186, 162, 218, 0.45);
+  background: rgba(245, 240, 252, 0.5);
+}
+
+.color-picker-value-input:hover:not(:focus) {
+  background: rgba(160, 100, 210, 0.06);
+}
+
+/* copy button */
+
+.color-picker-copy-btn {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms, background 120ms;
+  position: relative;
+}
+
+.color-picker-value-row:hover .color-picker-copy-btn {
+  opacity: 1;
+}
+
+.color-picker-copy-btn::before {
+  content: "";
+  display: block;
+  width: 14px;
+  height: 14px;
+  margin: 0 auto;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Crect x='9' y='9' width='13' height='13' rx='2'/%3E%3Cpath d='M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1'/%3E%3C/svg%3E") center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Crect x='9' y='9' width='13' height='13' rx='2'/%3E%3Cpath d='M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1'/%3E%3C/svg%3E") center / contain no-repeat;
+  color: #a080b8;
+}
+
+.color-picker-copy-btn:hover {
+  background: rgba(160, 100, 210, 0.12);
+}
+
+.color-picker-copy-btn:active {
+  background: rgba(160, 100, 210, 0.2);
+}
+
+/* hint */
+
+.color-picker-hint {
+  margin: 0;
+  color: #a080b8;
+  font-size: 13px;
+  user-select: none;
+}
