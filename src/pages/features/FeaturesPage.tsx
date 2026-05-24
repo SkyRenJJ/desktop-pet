@@ -6,6 +6,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { closeFeaturesWindow } from "../../features/pet/lib/featuresWindow";
 import { ColorPickerWorkArea } from "./color-picker";
+import { PdfToolWorkArea } from "./pdf-tool";
 import { TimestampConverterWorkArea } from "./timestamp-converter";
 import { parseJsonInput } from "../../features/json-parser/lib/parseJsonInput";
 import { JsonTree } from "../../features/json-parser";
@@ -14,7 +15,7 @@ import "./FeaturesPage.css";
 
 // --- feature registry ---
 
-type FeatureId = "json-parse" | "photo-1inch" | "image-compress" | "color-picker" | "timestamp-converter" | "schedule-shutdown" | "network-speed-test" | "mobile-debug" | "adb-file-manager" | "memo";
+type FeatureId = "json-parse" | "photo-1inch" | "image-compress" | "color-picker" | "timestamp-converter" | "pdf-tool" | "schedule-shutdown" | "network-speed-test" | "mobile-debug" | "adb-file-manager" | "memo";
 
 interface FeatureEntry {
   id: FeatureId;
@@ -29,6 +30,7 @@ const FEATURES: FeatureEntry[] = [
   { id: "memo", label: "备忘录", category: "实用工具" },
   { id: "color-picker", label: "取色器", category: "实用工具" },
   { id: "timestamp-converter", label: "时间戳转换器", category: "实用工具" },
+  { id: "pdf-tool", label: "PDF批量处理", category: "实用工具" },
   { id: "schedule-shutdown", label: "定时关机", category: "系统工具" },
   { id: "network-speed-test", label: "网速测试", category: "系统工具" },
   // { id: "mobile-debug", label: "手机调试", category: "开发工具" },
@@ -1974,6 +1976,8 @@ function WorkArea({ feature }: { feature: FeatureId }) {
       return <ColorPickerWorkArea />;
     case "timestamp-converter":
       return <TimestampConverterWorkArea />;
+    case "pdf-tool":
+      return <PdfToolWorkArea />;
     case "schedule-shutdown":
       return <ScheduleShutdownWorkArea />;
     case "network-speed-test":

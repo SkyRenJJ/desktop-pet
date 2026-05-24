@@ -33,4 +33,5 @@ ureq = { version = "2", features = ["native-tls"] }
 zip = "0.6"
 notify-rust = { version = "4", default-features = false, features = ["d"] }
 tauri-plugin-clipboard-manager = "2"
+lopdf = "0.34"
 

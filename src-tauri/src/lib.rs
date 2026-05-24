@@ -649,6 +649,262 @@ fn base64_decode(input: &str) -> Result<Vec<u8>, String> {
     Ok(output)
 }
 
+fn base64_encode(input: &[u8]) -> String {
+    let alphabet: Vec<char> =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+            .chars()
+            .collect();
+    let mut result = String::with_capacity((input.len() + 2) / 3 * 4);
+
+    for chunk in input.chunks(3) {
+        let b0 = chunk[0] as u32;
+        let b1 = if chunk.len() > 1 { chunk[1] as u32 } else { 0 };
+        let b2 = if chunk.len() > 2 { chunk[2] as u32 } else { 0 };
+        let triple = (b0 << 16) | (b1 << 8) | b2;
+
+        result.push(alphabet[((triple >> 18) & 0x3F) as usize]);
+        result.push(alphabet[((triple >> 12) & 0x3F) as usize]);
+        if chunk.len() > 1 {
+            result.push(alphabet[((triple >> 6) & 0x3F) as usize]);
+        } else {
+            result.push('=');
+        }
+        if chunk.len() > 2 {
+            result.push(alphabet[(triple & 0x3F) as usize]);
+        } else {
+            result.push('=');
+        }
+    }
+
+    result
+}
+
+#[tauri::command]
+fn read_file(path: String) -> Result<String, String> {
+    let bytes = std::fs::read(&path).map_err(|e| format!("Failed to read file: {}", e))?;
+    Ok(base64_encode(&bytes))
+}
+
+// --- PDF commands (lopdf) ---
+
+/// Resolve an object — if it's already a dictionary, return it directly;
+/// if it's a reference, look it up.  Returns None on failure.
+fn resolve_dict<'a>(doc: &'a lopdf::Document, obj: &'a lopdf::Object) -> Option<&'a lopdf::Dictionary> {
+    match obj {
+        lopdf::Object::Dictionary(d) => Some(d),
+        lopdf::Object::Reference(id) => match doc.get_object(*id) {
+            Ok(lopdf::Object::Dictionary(ref d)) => Some(d),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
+fn count_pages_in_node(doc: &lopdf::Document, dict: &lopdf::Dictionary, depth: u32) -> usize {
+    if depth > 30 {
+        return 0;
+    }
+    // Check /Type
+    let is_page = dict
+        .get(b"Type")
+        .ok()
+        .and_then(|o| o.as_name().ok())
+        .map_or(false, |n| n == b"Page");
+    if is_page {
+        return 1;
+    }
+    // Recurse into /Kids
+    if let Ok(lopdf::Object::Array(kids)) = dict.get(b"Kids") {
+        let mut total = 0;
+        for kid_obj in kids.iter() {
+            if let Some(kid_dict) = resolve_dict(doc, kid_obj) {
+                total += count_pages_in_node(doc, kid_dict, depth + 1);
+            }
+        }
+        return total;
+    }
+    0
+}
+
+fn get_page_count(doc: &lopdf::Document) -> usize {
+    let count = doc.get_pages().len();
+    if count > 0 {
+        return count;
+    }
+    // Fallback: walk the page tree from the catalog root
+    let root_obj = doc.trailer.get(b"Root").ok();
+    if let Some(cat_dict) = root_obj.and_then(|o| resolve_dict(doc, o)) {
+        if let Ok(pages_obj) = cat_dict.get(b"Pages") {
+            if let Some(pages_dict) = resolve_dict(doc, pages_obj) {
+                return count_pages_in_node(doc, pages_dict, 0);
+            }
+        }
+    }
+    0
+}
+
+#[tauri::command]
+fn pdf_page_count(path: String) -> Result<usize, String> {
+    let bytes = std::fs::read(&path).map_err(|e| format!("读取文件失败: {}", e))?;
+    let doc = lopdf::Document::load_mem(&bytes).map_err(|e| format!("解析PDF失败: {}", e))?;
+
+    let count = get_page_count(&doc);
+    if count == 0 {
+        return Err(format!(
+            "无法解析该PDF的页面信息（PDF对象总数: {}）。请尝试用其他工具重新保存后再拆分。",
+            doc.objects.len()
+        ));
+    }
+    Ok(count)
+}
+
+/// Collect all Page object IDs in tree order by walking the page tree.
+fn collect_all_page_ids(doc: &lopdf::Document, node: &lopdf::Dictionary, depth: u32) -> Vec<lopdf::ObjectId> {
+    if depth > 30 {
+        return vec![];
+    }
+    if let Ok(Ok(n)) = node.get(b"Type").map(|o| o.as_name()) {
+        if n == b"Page" {
+            return vec![]; // leaf page — caller tracks ID
+        }
+    }
+    if let Ok(lopdf::Object::Array(kids)) = node.get(b"Kids") {
+        let mut ids = vec![];
+        for kid in kids.iter() {
+            if let Ok(id) = kid.as_reference() {
+                match doc.get_object(id) {
+                    Ok(lopdf::Object::Dictionary(ref d)) => {
+                        if d.get(b"Type").ok().and_then(|o| o.as_name().ok()).map_or(false, |n| n == b"Page") {
+                            ids.push(id);
+                        } else {
+                            ids.extend(collect_all_page_ids(doc, d, depth + 1));
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+        return ids;
+    }
+    vec![]
+}
+
+/// Rebuild the root Pages node's /Kids to only contain the kept pages (flat list).
+fn rebuild_page_tree(doc: &mut lopdf::Document, keep: &std::collections::HashSet<u32>) -> Result<(), String> {
+    // Locate the root Pages dictionary
+    let root = doc.trailer.get(b"Root").map_err(|e| format!("无Root: {}", e))?;
+    let cat = resolve_dict(doc, root).ok_or("Root不是字典")?;
+    let pages_obj = cat.get(b"Pages").map_err(|e| format!("无Pages: {}", e))?;
+    let pages_dict = resolve_dict(doc, pages_obj).ok_or("Pages不是字典")?;
+
+    // Collect all page object IDs via recursive walk
+    let all_ids = collect_all_page_ids(doc, pages_dict, 0);
+
+    // If the pages root directly contains Page objects (flat structure), those are in all_ids already.
+    // But some PDFs put Page objects directly in the root Pages node's Kids.
+    // Let's also check for that case.
+    let mut all_ids = all_ids;
+    if let Ok(lopdf::Object::Array(kids)) = pages_dict.get(b"Kids") {
+        for kid in kids.iter() {
+            if let Ok(id) = kid.as_reference() {
+                if let Ok(lopdf::Object::Dictionary(ref d)) = doc.get_object(id) {
+                    if d.get(b"Type").ok().and_then(|o| o.as_name().ok()).map_or(false, |n| n == b"Page") {
+                        if !all_ids.contains(&id) {
+                            all_ids.push(id);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if all_ids.is_empty() {
+        return Err("未能找到任何页面对象".into());
+    }
+
+    // Collect page IDs from all_ids AND from get_pages() to get complete list
+    let mut page_list: Vec<lopdf::ObjectId> = vec![];
+    // First try get_pages() — it may have pages the manual walk missed
+    for (&_num, &id) in doc.get_pages().iter() {
+        if !page_list.contains(&id) {
+            page_list.push(id);
+        }
+    }
+    // Then add from manual walk
+    for id in &all_ids {
+        if !page_list.contains(id) {
+            page_list.push(*id);
+        }
+    }
+
+    if page_list.is_empty() {
+        return Err("未能找到任何页面对象".into());
+    }
+
+    // Build new Kids array with only kept pages
+    let mut new_kids = lopdf::Object::Array(vec![]);
+    for (i, &page_id) in page_list.iter().enumerate() {
+        let page_num = (i + 1) as u32;
+        if keep.contains(&page_num) {
+            new_kids.as_array_mut().unwrap().push(lopdf::Object::Reference(page_id));
+        }
+    }
+
+    // Get the pages root object ID to update it
+    let pages_id = match pages_obj {
+        lopdf::Object::Reference(id) => *id,
+        _ => {
+            // Pages is a direct dictionary in catalog — need to handle differently
+            // For now, find the pages reference from catalog
+            return Err("Pages节点不是引用，暂不支持此结构".into());
+        }
+    };
+
+    // Update the pages root's Kids and Count
+    let new_count = new_kids.as_array().map(|a| a.len() as i64).unwrap_or(0);
+    if let Ok(lopdf::Object::Dictionary(ref mut d)) = doc.get_object_mut(pages_id) {
+        d.set(b"Kids", new_kids);
+        d.set(b"Count", lopdf::Object::Integer(new_count));
+    }
+
+    // Remove orphaned page objects from document
+    let page_ids_to_remove: Vec<lopdf::ObjectId> = page_list
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| !keep.contains(&((*i + 1) as u32)))
+        .map(|(_, &id)| id)
+        .collect();
+    for id in &page_ids_to_remove {
+        doc.objects.remove(id);
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+fn pdf_extract_pages(path: String, pages: Vec<u32>, output: String) -> Result<(), String> {
+    let bytes = std::fs::read(&path).map_err(|e| format!("读取文件失败: {}", e))?;
+    let mut doc = lopdf::Document::load_mem(&bytes).map_err(|e| format!("解析PDF失败: {}", e))?;
+
+    let total = get_page_count(&doc) as u32;
+    if total == 0 {
+        return Err("无法读取PDF页数，该文件可能不受支持".into());
+    }
+    let keep: std::collections::HashSet<u32> = pages.iter().copied().collect();
+
+    let indexed_count = doc.get_pages().len() as u32;
+    if indexed_count > 0 {
+        let to_delete: Vec<u32> = (1..=indexed_count).filter(|p| !keep.contains(p)).collect();
+        if !to_delete.is_empty() {
+            doc.delete_pages(&to_delete);
+        }
+    } else {
+        rebuild_page_tree(&mut doc, &keep)?;
+    }
+
+    doc.save(&output).map(|_| ()).map_err(|e| format!("保存PDF失败: {}", e))
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -781,7 +1037,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
-        .invoke_handler(tauri::generate_handler![greet, exit_app, show_pet_context_menu, set_always_on_top, set_all_always_on_top, save_file, schedule_shutdown, cancel_shutdown, scrcpy_check, scrcpy_launch, scrcpy_install, adb_devices, adb_file_list, adb_file_delete, adb_file_pull, save_memo, load_memos, delete_memo])
+        .invoke_handler(tauri::generate_handler![greet, exit_app, show_pet_context_menu, set_always_on_top, set_all_always_on_top, save_file, read_file, pdf_page_count, pdf_extract_pages, schedule_shutdown, cancel_shutdown, scrcpy_check, scrcpy_launch, scrcpy_install, adb_devices, adb_file_list, adb_file_delete, adb_file_pull, save_memo, load_memos, delete_memo])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
