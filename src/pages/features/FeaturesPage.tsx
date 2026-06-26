@@ -7,7 +7,9 @@ import { open, save } from "@tauri-apps/plugin-dialog";
 import { closeFeaturesWindow } from "../../features/pet/lib/featuresWindow";
 import { ColorPickerWorkArea } from "./color-picker";
 import { PdfToolWorkArea } from "./pdf-tool";
+import { DeepseekBalanceWorkArea } from "./deepseek-balance";
 import { TimestampConverterWorkArea } from "./timestamp-converter";
+import { WechatTransferWorkArea } from "./wechat-transfer";
 import { parseJsonInput } from "../../features/json-parser/lib/parseJsonInput";
 import { JsonTree } from "../../features/json-parser";
 import type { ParsedJsonResult, JsonValue } from "../../features/json-parser/types/jsonParser";
@@ -15,7 +17,7 @@ import "./FeaturesPage.css";
 
 // --- feature registry ---
 
-type FeatureId = "json-parse" | "photo-1inch" | "image-compress" | "color-picker" | "timestamp-converter" | "pdf-tool" | "schedule-shutdown" | "network-speed-test" | "mobile-debug" | "adb-file-manager" | "memo";
+type FeatureId = "json-parse" | "photo-1inch" | "image-compress" | "color-picker" | "timestamp-converter" | "pdf-tool" | "schedule-shutdown" | "network-speed-test" | "mobile-debug" | "adb-file-manager" | "memo" | "api-debugger" | "wechat-transfer" | "deepseek-balance";
 
 interface FeatureEntry {
   id: FeatureId;
@@ -28,6 +30,8 @@ const FEATURES: FeatureEntry[] = [
   { id: "photo-1inch", label: "照片处理工具", category: "实用工具" },
   { id: "image-compress", label: "图片压缩", category: "实用工具" },
   { id: "memo", label: "备忘录", category: "实用工具" },
+  { id: "wechat-transfer", label: "微信转账模拟器", category: "实用工具" },
+  { id: "deepseek-balance", label: "DeepSeek Token 查询", category: "开发工具" },
   { id: "color-picker", label: "取色器", category: "实用工具" },
   { id: "timestamp-converter", label: "时间戳转换器", category: "实用工具" },
   { id: "pdf-tool", label: "PDF批量处理", category: "实用工具" },
@@ -1988,6 +1992,10 @@ function WorkArea({ feature }: { feature: FeatureId }) {
       return <AdbFileManagerWorkArea />;
     case "memo":
       return <MemoWorkArea />;
+    case "wechat-transfer":
+      return <WechatTransferWorkArea />;
+    case "deepseek-balance":
+      return <DeepseekBalanceWorkArea />;
     default:
       return null;
   }

@@ -11,7 +11,14 @@
       "Bash(cargo search *)",
       "Bash(npm add *)",
       "Bash(xargs grep -l \"clipboard-history\")",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(npx vite *)",
+      "Bash(npx tauri *)",
+      "Bash(netstat -ano)",
+      "WebFetch(domain:localhost)",
+      "Bash(curl -s http://localhost:1420/)",
+      "Bash(taskkill *)",
+      "Bash(curl *)"
     ]
   }
 }

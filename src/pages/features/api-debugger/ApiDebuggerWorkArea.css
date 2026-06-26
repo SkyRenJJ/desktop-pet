@@ -1,0 +1,576 @@
+.api-debugger-work {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+/* --- main tabs (接口调试 / Socket调试) --- */
+
+.api-main-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 10px 14px 0;
+  flex: none;
+}
+
+.api-main-tab {
+  padding: 7px 18px;
+  border: 0;
+  border-radius: 8px 8px 0 0;
+  background: rgba(186, 162, 218, 0.15);
+  color: #7b5a90;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms, color 120ms;
+}
+
+.api-main-tab:hover {
+  background: rgba(160, 100, 210, 0.18);
+}
+
+.api-main-tab--active {
+  background: rgba(255, 255, 255, 0.75);
+  color: #752fb0;
+  box-shadow: 0 -1px 4px rgba(130, 82, 180, 0.06);
+}
+
+/* --- main body --- */
+
+.api-main-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.75);
+  border-top: 1px solid rgba(186, 162, 218, 0.25);
+  display: flex;
+  flex-direction: column;
+}
+
+.api-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+
+.api-panel--center {
+  align-items: center;
+  justify-content: center;
+}
+
+/* --- request bar --- */
+
+.api-request-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex: none;
+}
+
+.api-method-select {
+  flex: none;
+  width: 90px;
+  padding: 8px 10px;
+  border: 1px solid rgba(186, 162, 218, 0.4);
+  border-radius: 8px;
+  background: rgba(245, 240, 252, 0.6);
+  color: #3e1f54;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  outline: none;
+  cursor: pointer;
+  appearance: auto;
+}
+
+.api-method-select:focus {
+  border-color: rgba(160, 100, 210, 0.6);
+}
+
+.api-url-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid rgba(186, 162, 218, 0.4);
+  border-radius: 8px;
+  background: rgba(245, 240, 252, 0.5);
+  color: #3e1f54;
+  font-size: 13px;
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  outline: none;
+  transition: border-color 120ms;
+}
+
+.api-url-input:focus {
+  border-color: rgba(160, 100, 210, 0.6);
+}
+
+.api-url-input::placeholder {
+  color: #b8a0c8;
+}
+
+.api-send-btn {
+  flex: none;
+  padding: 8px 28px;
+  border: 0;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #c8a0e0, #9b5fc0);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 120ms, opacity 120ms;
+  box-shadow: 0 2px 6px rgba(130, 82, 180, 0.2);
+}
+
+.api-send-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #d0a8e8, #a368c8);
+}
+
+.api-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* --- param type bar --- */
+
+.api-param-type-bar {
+  display: flex;
+  gap: 4px;
+  flex: none;
+}
+
+.api-param-type-btn {
+  padding: 4px 14px;
+  border: 1px solid rgba(186, 162, 218, 0.3);
+  border-radius: 999px;
+  background: transparent;
+  color: #7b5a90;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 120ms, color 120ms;
+}
+
+.api-param-type-btn:hover:not(:disabled) {
+  background: rgba(160, 100, 210, 0.08);
+}
+
+.api-param-type-btn--active {
+  background: rgba(160, 100, 210, 0.15);
+  color: #752fb0;
+  border-color: rgba(160, 100, 210, 0.35);
+}
+
+.api-param-type-btn--disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* --- section --- */
+
+.api-section {
+  flex: none;
+}
+
+.api-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.api-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #5b336e;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.api-add-btn {
+  padding: 2px 12px;
+  border: 1px solid rgba(160, 100, 210, 0.3);
+  border-radius: 999px;
+  background: transparent;
+  color: #752fb0;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 100ms;
+}
+
+.api-add-btn:hover {
+  background: rgba(160, 100, 210, 0.08);
+}
+
+/* --- key-value list --- */
+
+.api-kv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.api-kv-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.api-kv-key,
+.api-kv-value {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 10px;
+  border: 1px solid rgba(186, 162, 218, 0.3);
+  border-radius: 6px;
+  background: rgba(245, 240, 252, 0.4);
+  color: #3e1f54;
+  font-size: 12px;
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  outline: none;
+  transition: border-color 100ms;
+}
+
+.api-kv-key:focus,
+.api-kv-value:focus {
+  border-color: rgba(160, 100, 210, 0.5);
+}
+
+.api-kv-key::placeholder,
+.api-kv-value::placeholder {
+  color: #c8b0d8;
+  font-family: inherit;
+}
+
+.api-kv-remove {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #b098c8;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 100ms, color 100ms;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.api-kv-remove:hover {
+  background: rgba(220, 80, 80, 0.1);
+  color: #d45050;
+}
+
+/* --- json input --- */
+
+.api-json-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid rgba(186, 162, 218, 0.35);
+  border-radius: 8px;
+  background: rgba(245, 240, 252, 0.4);
+  color: #3e1f54;
+  font-size: 12px;
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  outline: none;
+  resize: vertical;
+  box-sizing: border-box;
+  line-height: 1.6;
+}
+
+.api-json-input:focus {
+  border-color: rgba(160, 100, 210, 0.5);
+}
+
+.api-json-input::placeholder {
+  color: #c8b0d8;
+}
+
+/* --- response section --- */
+
+.api-response-section {
+  flex: 1;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(186, 162, 218, 0.25);
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(245, 240, 252, 0.3);
+}
+
+.api-response-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: rgba(245, 240, 252, 0.6);
+  border-bottom: 1px solid rgba(186, 162, 218, 0.2);
+  flex: none;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.api-response-tabs {
+  display: flex;
+  gap: 2px;
+}
+
+.api-response-tab {
+  padding: 4px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #7b5a90;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 100ms, color 100ms;
+}
+
+.api-response-tab:hover {
+  background: rgba(160, 100, 210, 0.08);
+}
+
+.api-response-tab--active {
+  background: rgba(160, 100, 210, 0.15);
+  color: #752fb0;
+}
+
+.api-response-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.api-status-code {
+  font-size: 11px;
+  font-weight: 700;
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  color: #5b336e;
+}
+
+.api-status-ok {
+  color: #2d8a4e;
+}
+
+.api-status-err {
+  color: #c0392b;
+}
+
+.api-response-time {
+  font-size: 11px;
+  color: #a080b8;
+  font-weight: 600;
+}
+
+.api-response-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px 12px;
+}
+
+.api-response-placeholder {
+  margin: 0;
+  padding: 30px 0;
+  text-align: center;
+  color: #c0a8d8;
+  font-size: 13px;
+}
+
+.api-response-pre {
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  color: #3e1f54;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: break-word;
+}
+
+/* --- socket: status dot --- */
+
+.socket-status-dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #b8a0c8;
+  transition: background 200ms;
+}
+
+.socket-status-dot--on {
+  background: #2d8a4e;
+  box-shadow: 0 0 6px rgba(45, 138, 78, 0.4);
+}
+
+.socket-status-dot--connecting {
+  background: #e6a817;
+  animation: socket-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes socket-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.socket-disconnect-btn {
+  background: linear-gradient(180deg, #e89090, #c05050) !important;
+}
+
+.socket-disconnect-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #eea0a0, #d05858) !important;
+}
+
+/* --- socket: log section --- */
+
+.socket-log-section {
+  flex: 1;
+  min-height: 200px;
+}
+
+.socket-log-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.socket-log-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.socket-msg-count {
+  font-size: 11px;
+  color: #a080b8;
+}
+
+/* --- socket: message items --- */
+
+.socket-msg {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border-left: 3px solid transparent;
+}
+
+.socket-msg--sent {
+  background: rgba(160, 200, 210, 0.1);
+  border-left-color: #60a0c0;
+}
+
+.socket-msg--received {
+  background: rgba(160, 210, 180, 0.1);
+  border-left-color: #4a9;
+}
+
+.socket-msg--system {
+  background: rgba(200, 190, 210, 0.08);
+  border-left-color: #b8a0c8;
+}
+
+.socket-msg--error {
+  background: rgba(220, 180, 180, 0.12);
+  border-left-color: #c0392b;
+}
+
+.socket-msg-time {
+  flex: none;
+  font-size: 10px;
+  color: #a080b8;
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  padding-top: 1px;
+}
+
+.socket-msg-tag {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  background: rgba(186, 162, 218, 0.15);
+  color: #7b5a90;
+}
+
+.socket-msg-tag--sent {
+  background: rgba(96, 160, 192, 0.15);
+  color: #4078a0;
+}
+
+.socket-msg-tag--recv {
+  background: rgba(68, 170, 153, 0.15);
+  color: #3a7a6a;
+}
+
+.socket-msg-tag--err {
+  background: rgba(192, 57, 43, 0.12);
+  color: #a03030;
+}
+
+.socket-msg-content {
+  margin: 0;
+  flex: 1;
+  min-width: 100%;
+  font-size: 12px;
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  color: #3e1f54;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: break-word;
+}
+
+/* --- socket: send section --- */
+
+.socket-send-section {
+  flex: none;
+}
+
+.socket-send-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.socket-send-input {
+  flex: 1;
+  min-width: 0;
+  resize: none;
+}
+
+.socket-send-btn {
+  flex: none;
+  padding: 8px 28px !important;
+  border-radius: 8px !important;
+  align-self: flex-end;
+}
+
+/* --- status toast --- */
+
+.api-status {
+  flex: none;
+  padding: 8px 14px;
+  margin: 0 14px 10px;
+  border-radius: 8px;
+  background: rgba(160, 100, 210, 0.1);
+  color: #5b336e;
+  font-size: 12px;
+  text-align: center;
+}

@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "t-pet",
+  "productName": "wudikabi",
   "version": "0.1.0",
   "identifier": "com.sky.pet",
   "build": {
@@ -13,7 +13,7 @@
     "macOSPrivateApi": true,
     "windows": [
       {
-        "title": "t-pet",
+        "title": "无敌卡比",
         "width": 360,
         "height": 360,
         "center": false,

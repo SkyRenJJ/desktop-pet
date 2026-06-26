@@ -1,0 +1,395 @@
+﻿/* --- DeepSeek balance work area --- */
+
+.deepseek-work {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+  gap: 12px;
+}
+
+/* --- section --- */
+
+.deepseek-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.deepseek-section-header {
+  color: #a080b8;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+/* --- API Key row --- */
+
+.deepseek-key-row {
+  display: flex;
+  gap: 8px;
+}
+
+.deepseek-key-input-wrap {
+  flex: 1;
+  display: flex;
+  position: relative;
+}
+
+.deepseek-key-input {
+  flex: 1;
+  padding: 8px 60px 8px 10px;
+  border: 1px solid rgba(180, 155, 210, 0.5);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #3e1f54;
+  font-size: 12px;
+  font-family: "Consolas", "Courier New", monospace;
+  outline: none;
+  transition: border-color 150ms, box-shadow 150ms;
+}
+
+.deepseek-key-input:focus {
+  border-color: rgba(160, 100, 210, 0.8);
+  box-shadow: 0 0 0 3px rgba(160, 100, 210, 0.08);
+}
+
+.deepseek-key-input::placeholder {
+  color: #b8a0c8;
+  font-family: inherit;
+  font-size: 11px;
+}
+
+.deepseek-key-toggle {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 5px;
+  padding: 3px 8px;
+  background: rgba(160, 100, 210, 0.12);
+  color: #752fb0;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 150ms;
+  white-space: nowrap;
+}
+
+.deepseek-key-toggle:hover {
+  background: rgba(160, 100, 210, 0.25);
+}
+
+/* --- error / loading / placeholder --- */
+
+.deepseek-error {
+  color: #c84a5a;
+  font-size: 11px;
+  line-height: 1.4;
+  min-height: 16px;
+}
+
+.deepseek-loading {
+  color: #a080b8;
+  font-size: 12px;
+  text-align: center;
+  padding: 12px 0;
+  animation: ds-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes ds-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.deepseek-placeholder {
+  color: #b8a0c8;
+  font-size: 12px;
+  text-align: center;
+  padding: 12px 0;
+  font-style: italic;
+}
+
+/* --- balance grid --- */
+
+.deepseek-balance-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.deepseek-balance-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  border: 1px solid rgba(180, 155, 210, 0.3);
+  border-radius: 10px;
+  background: rgba(245, 240, 252, 0.5);
+}
+
+.deepseek-balance-label {
+  color: #a080b8;
+  font-size: 10px;
+  font-weight: 600;
+  user-select: none;
+}
+
+.deepseek-balance-value {
+  color: #3e1f54;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: "Consolas", "Courier New", monospace;
+  word-break: break-all;
+  text-align: center;
+}
+
+.deepseek-balance-value.deepseek-used {
+  color: #8b5e3c;
+}
+
+.deepseek-balance-value.deepseek-remaining.is-rich {
+  color: #2e7d32;
+}
+
+.deepseek-balance-value.deepseek-remaining.is-ok {
+  color: #e65100;
+}
+
+.deepseek-balance-value.deepseek-remaining.is-low {
+  color: #c62828;
+}
+
+/* --- controls --- */
+
+.deepseek-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.deepseek-btn {
+  flex: 1;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 0;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: filter 120ms, opacity 120ms;
+}
+
+.deepseek-btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.deepseek-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.deepseek-refresh-btn {
+  background: linear-gradient(180deg, #4fc3f7, #0288d1);
+}
+
+.deepseek-timer-btn {
+  background: linear-gradient(180deg, #c8a0e0, #9b5fc0);
+}
+
+.deepseek-timer-btn.is-active {
+  background: linear-gradient(180deg, #e0a0a0, #c05f5f);
+}
+
+/* --- interval --- */
+
+.deepseek-interval-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.deepseek-interval-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #7b5a90;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: default;
+  user-select: none;
+}
+
+.deepseek-interval-value {
+  color: #752fb0;
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 32px;
+}
+
+.deepseek-interval-slider {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 2px;
+  background: rgba(180, 155, 210, 0.35);
+  outline: none;
+  cursor: pointer;
+}
+
+.deepseek-interval-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #9b5fc0;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(130, 82, 180, 0.25);
+  cursor: pointer;
+  transition: transform 120ms;
+}
+
+.deepseek-interval-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.deepseek-interval-slider:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.deepseek-interval-ends {
+  display: flex;
+  flex: none;
+  justify-content: space-between;
+  color: #b8a0c8;
+  font-size: 9px;
+  width: 32px;
+}
+
+/* --- status bar --- */
+
+.deepseek-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(180, 155, 210, 0.2);
+  flex-wrap: wrap;
+}
+
+.deepseek-status-item {
+  color: #a080b8;
+  font-size: 10px;
+  font-weight: 600;
+  user-select: none;
+}
+
+.deepseek-timer-active {
+  color: #2e7d32;
+  animation: ds-pulse 2s ease-in-out infinite;
+}
+
+.deepseek-timer-idle {
+  color: #c8b0d8;
+}
+
+/* --- detail section (request/response) --- */
+
+.deepseek-detail-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.deepseek-detail-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.deepseek-detail-tab {
+  border: 1px solid rgba(180, 155, 210, 0.4);
+  border-radius: 6px;
+  padding: 3px 12px;
+  background: transparent;
+  color: #5b336e;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 150ms, border-color 150ms;
+}
+
+.deepseek-detail-tab:hover {
+  background: rgba(160, 100, 210, 0.08);
+}
+
+.deepseek-detail-tab.is-active {
+  background: rgba(160, 100, 210, 0.18);
+  border-color: rgba(160, 100, 210, 0.6);
+  color: #752fb0;
+}
+
+.deepseek-response-status {
+  margin-left: auto;
+  color: #4caf50;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.deepseek-response-status.is-err {
+  color: #c84a5a;
+}
+
+.deepseek-detail-pre {
+  flex: 1;
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(180, 155, 210, 0.3);
+  border-radius: 8px;
+  background: rgba(245, 240, 252, 0.6);
+  color: #3e1f54;
+  font-size: 11px;
+  font-family: "Consolas", "Courier New", monospace;
+  line-height: 1.5;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  min-height: 0;
+}
+/* --- multi-currency list --- */
+
+.deepseek-balances {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.deepseek-balance-label-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.deepseek-currency-tag {
+  color: #5b336e;
+  font-size: 10px;
+  font-weight: 700;
+  background: rgba(160, 100, 210, 0.1);
+  border-radius: 4px;
+  padding: 1px 8px;
+  letter-spacing: 0.04em;
+}
