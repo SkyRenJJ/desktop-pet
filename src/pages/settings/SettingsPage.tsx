@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+﻿import { useCallback, useEffect } from "react";
+import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { emitTo } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -25,31 +26,17 @@ const POSITION_OPTIONS: DisplayPosition[] = [
 function readSavedPosition(): DisplayPosition {
   try {
     const raw = localStorage.getItem(POSITION_STORAGE_KEY);
-
-    if (raw && POSITION_LABELS[raw as DisplayPosition]) {
-      return raw as DisplayPosition;
-    }
-  } catch {
-    // ignore
-  }
-
+    if (raw && POSITION_LABELS[raw as DisplayPosition]) return raw as DisplayPosition;
+  } catch {}
   return "bottom-left";
 }
 
 function savePosition(position: DisplayPosition) {
-  try {
-    localStorage.setItem(POSITION_STORAGE_KEY, position);
-  } catch {
-    // ignore
-  }
+  try { localStorage.setItem(POSITION_STORAGE_KEY, position); } catch {}
 }
 
 function saveAlwaysOnTop(onTop: boolean) {
-  try {
-    localStorage.setItem("t-pet:always-on-top", String(onTop));
-  } catch {
-    // ignore
-  }
+  try { localStorage.setItem("t-pet:always-on-top", String(onTop)); } catch {}
 }
 
 export function SettingsPage() {
@@ -65,54 +52,30 @@ export function SettingsPage() {
   }, []);
 
   const handleConfirm = useCallback(() => {
-    // Persist synchronously
     savePosition(position);
     saveAlwaysOnTop(alwaysOnTop);
-
-    // Fire and forget — must not await, to avoid deadlock when the Rust
-    // command touches the settings window from its own command handler.
     invoke("set_all_always_on_top", { onTop: alwaysOnTop }).catch(() => {});
     emitTo("main", "settings-position-changed", position).catch(() => {});
     emitTo("main", "settings-always-on-top-changed", alwaysOnTop).catch(() => {});
-
     void getCurrentWindow().close();
   }, [position, alwaysOnTop]);
 
-  const handleClose = useCallback(() => {
-    void getCurrentWindow().close();
-  }, []);
+  const handleClose = useCallback(() => { void getCurrentWindow().close(); }, []);
 
-  const handleExit = useCallback(() => {
-    void invoke("exit_app");
-  }, []);
+  const handleExit = useCallback(() => { void invoke("exit_app"); }, []);
 
   const handleHeaderMouseDown = useCallback(() => {
-    if (!("__TAURI_INTERNALS__" in window)) {
-      return;
-    }
-    void getCurrentWindow().startDragging();
+    if ("__TAURI_INTERNALS__" in window) void getCurrentWindow().startDragging();
   }, []);
 
   const handleMinimize = useCallback(() => {
-    if (!("__TAURI_INTERNALS__" in window)) {
-      return;
-    }
-    void getCurrentWindow().minimize();
+    if ("__TAURI_INTERNALS__" in window) void getCurrentWindow().minimize();
   }, []);
 
-  // Focus trap / keyboard: close on Escape
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        void getCurrentWindow().close();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+    const h = (e: KeyboardEvent) => { if (e.key === "Escape") void getCurrentWindow().close(); };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
   }, []);
 
   return (
@@ -121,73 +84,29 @@ export function SettingsPage() {
         <div className="settings-header" onMouseDown={handleHeaderMouseDown}>
           <p className="settings-title">设置</p>
           <div className="settings-header-actions">
-            <button
-              type="button"
-              className="settings-minimize"
-              onMouseDown={(e) => e.stopPropagation()}
-              onClick={handleMinimize}
-              aria-label="最小化"
-            >
-              ─
-            </button>
-            <button
-              type="button"
-              className="settings-close"
-              onMouseDown={(e) => e.stopPropagation()}
-              onClick={handleClose}
-            >
-              ✕
-            </button>
+            <button className="settings-minimize" onMouseDown={(e) => e.stopPropagation()} onClick={handleMinimize}>─</button>
+            <button className="settings-close" onMouseDown={(e) => e.stopPropagation()} onClick={handleClose}>✕</button>
           </div>
         </div>
-
         <div className="settings-body">
           <label className="settings-field">
             <span className="settings-field-label">默认显示位置</span>
-            <select
-              className="settings-select"
-              value={position}
-              onChange={handleChange}
-            >
-              {POSITION_OPTIONS.map((opt) => (
-                <option key={opt} value={opt}>
-                  {POSITION_LABELS[opt]}
-                </option>
-              ))}
+            <select className="settings-select" value={position} onChange={handleChange}>
+              {POSITION_OPTIONS.map((o) => <option key={o} value={o}>{POSITION_LABELS[o]}</option>)}
             </select>
           </label>
-
           <div className="settings-field settings-field--toggle">
             <span className="settings-field-label">锁定层级</span>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={alwaysOnTop}
-              className={`settings-toggle ${alwaysOnTop ? "settings-toggle--on" : ""}`}
-              onClick={handleToggleAlwaysOnTop}
-            >
+            <button type="button" role="switch" aria-checked={alwaysOnTop}
+              className={"settings-toggle" + (alwaysOnTop ? " settings-toggle--on" : "")}
+              onClick={handleToggleAlwaysOnTop}>
               <span className="settings-toggle-thumb" />
             </button>
           </div>
         </div>
-
         <div className="settings-footer">
-          <button
-            type="button"
-            className="settings-confirm-btn"
-            onMouseDown={(e) => e.stopPropagation()}
-            onClick={handleConfirm}
-          >
-            确定
-          </button>
-          <button
-            type="button"
-            className="settings-exit-btn"
-            onMouseDown={(e) => e.stopPropagation()}
-            onClick={handleExit}
-          >
-            退出应用
-          </button>
+          <button className="settings-confirm-btn" onClick={handleConfirm}>确定</button>
+          <button className="settings-exit-btn" onClick={handleExit}>退出应用</button>
         </div>
       </div>
     </main>

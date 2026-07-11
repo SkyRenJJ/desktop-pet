@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { emitTo } from "@tauri-apps/api/event";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { closeFeaturesWindow } from "../../features/pet/lib/featuresWindow";
+import { readAlwaysOnTop } from "../../features/pet/services/windowService";
 import { ColorPickerWorkArea } from "./color-picker";
 import { PdfToolWorkArea } from "./pdf-tool";
 import { DeepseekBalanceWorkArea } from "./deepseek-balance";
@@ -2003,8 +2004,83 @@ function WorkArea({ feature }: { feature: FeatureId }) {
 
 // --- features page ---
 
+
+
+type DisplayPosition = "bottom-left" | "bottom-right" | "top-left" | "top-right";
+
+const POSITION_LABELS: Record<DisplayPosition, string> = {
+  "bottom-left": "左下角",
+  "bottom-right": "右下角",
+  "top-left": "左上角",
+  "top-right": "右上角",
+};
+
+const POSITION_OPTIONS: DisplayPosition[] = [
+  "bottom-left", "bottom-right", "top-left", "top-right",
+];
+
+const POS_KEY = "t-pet:display-position";
+
+function readSavedPosition(): DisplayPosition {
+  try {
+    const raw = localStorage.getItem(POS_KEY);
+    if (raw && POSITION_LABELS[raw as DisplayPosition]) return raw as DisplayPosition;
+  } catch {}
+  return "bottom-left";
+}
+
+function savePosition(pos: DisplayPosition) { try { localStorage.setItem(POS_KEY, pos); } catch {} }
+function saveAlwaysOnTop(on: boolean) { try { localStorage.setItem("t-pet:always-on-top", String(on)); } catch {} }
+
+function SettingsModal({ onClose }: { onClose: () => void }) {
+  const [pos, setPos] = useState<DisplayPosition>(readSavedPosition);
+  const [aot, setAot] = useState(readAlwaysOnTop);
+
+  const handleConfirm = useCallback(() => {
+    savePosition(pos);
+    saveAlwaysOnTop(aot);
+    invoke("set_all_always_on_top", { onTop: aot }).catch(() => {});
+    emitTo("main", "settings-position-changed", pos).catch(() => {});
+    emitTo("main", "settings-always-on-top-changed", aot).catch(() => {});
+    onClose();
+  }, [pos, aot, onClose]);
+
+  return (
+    <div className="settings-modal-overlay" onClick={onClose}>
+      <div className="settings-modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="settings-modal-header">
+          <span className="settings-modal-title">设置</span>
+          <button className="settings-modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="settings-modal-body">
+          <label className="settings-modal-field">
+            <span className="settings-modal-label">默认显示位置</span>
+            <select className="settings-modal-select" value={pos} onChange={(e) => setPos(e.target.value as DisplayPosition)}>
+              {POSITION_OPTIONS.map((o) => <option key={o} value={o}>{POSITION_LABELS[o]}</option>)}
+            </select>
+          </label>
+          <div className="settings-modal-field settings-modal-field--toggle">
+            <span className="settings-modal-label">锁定层级</span>
+            <button type="button" role="switch" aria-checked={aot}
+              className={"settings-modal-toggle" + (aot ? " is-on" : "")}
+              onClick={() => setAot((p) => !p)}>
+              <span className="settings-modal-toggle-thumb" />
+            </button>
+          </div>
+        </div>
+        <div className="settings-modal-footer">
+          <button className="settings-modal-confirm" onClick={handleConfirm}>确定</button>
+          <button className="settings-modal-exit" onClick={() => invoke("exit_app")}>退出应用</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function FeaturesPage() {
   const [activeFeature, setActiveFeature] = useState<FeatureId>(getInitialFeature);
+  const [showSettings, setShowSettings] = useState(false);
+
   const [sidebarRatio, setSidebarRatio] = useState(0.25);
   const [dragging, setDragging] = useState(false);
   const bodyRef = useRef<HTMLDivElement | null>(null);
@@ -2131,6 +2207,15 @@ export function FeaturesPage() {
                 ))}
               </div>
             ))}
+            <div className="features-settings-btn-wrap">
+              <button
+                type="button"
+                className="features-settings-btn"
+                onClick={() => setShowSettings(true)}
+              >
+                设置
+              </button>
+            </div>
           </nav>
 
           <div
@@ -2143,6 +2228,8 @@ export function FeaturesPage() {
           </div>
         </div>
       </div>
+
+      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
     </main>
   );
 }
