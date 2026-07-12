@@ -1,11 +1,10 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { emitTo } from "@tauri-apps/api/event";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { closeFeaturesWindow } from "../../features/pet/lib/featuresWindow";
-import { readAlwaysOnTop } from "../../features/pet/services/windowService";
 import { ColorPickerWorkArea } from "./color-picker";
 import { PdfToolWorkArea } from "./pdf-tool";
 import { DeepseekBalanceWorkArea } from "./deepseek-balance";
@@ -15,6 +14,7 @@ import { parseJsonInput } from "../../features/json-parser/lib/parseJsonInput";
 import { JsonTree } from "../../features/json-parser";
 import type { ParsedJsonResult, JsonValue } from "../../features/json-parser/types/jsonParser";
 import "./FeaturesPage.css";
+import eva1Img from "../../assets/eva1.png";
 
 // --- feature registry ---
 
@@ -2002,80 +2002,108 @@ function WorkArea({ feature }: { feature: FeatureId }) {
   }
 }
 
-// --- features page ---
 
 
 
 type DisplayPosition = "bottom-left" | "bottom-right" | "top-left" | "top-right";
 
-const POSITION_LABELS: Record<DisplayPosition, string> = {
+const DISPLAY_POSITION_KEY = "t-pet:display-position";
+const DISPLAY_LABELS: Record<DisplayPosition, string> = {
   "bottom-left": "左下角",
   "bottom-right": "右下角",
   "top-left": "左上角",
   "top-right": "右上角",
 };
 
-const POSITION_OPTIONS: DisplayPosition[] = [
-  "bottom-left", "bottom-right", "top-left", "top-right",
-];
-
-const POS_KEY = "t-pet:display-position";
-
 function readSavedPosition(): DisplayPosition {
-  try {
-    const raw = localStorage.getItem(POS_KEY);
-    if (raw && POSITION_LABELS[raw as DisplayPosition]) return raw as DisplayPosition;
-  } catch {}
+  try { const r = localStorage.getItem(DISPLAY_POSITION_KEY); if (r && DISPLAY_LABELS[r as DisplayPosition]) return r as DisplayPosition; } catch {}
   return "bottom-left";
 }
 
-function savePosition(pos: DisplayPosition) { try { localStorage.setItem(POS_KEY, pos); } catch {} }
-function saveAlwaysOnTop(on: boolean) { try { localStorage.setItem("t-pet:always-on-top", String(on)); } catch {} }
-
-function SettingsModal({ onClose }: { onClose: () => void }) {
-  const [pos, setPos] = useState<DisplayPosition>(readSavedPosition);
-  const [aot, setAot] = useState(readAlwaysOnTop);
-
-  const handleConfirm = useCallback(() => {
-    savePosition(pos);
-    saveAlwaysOnTop(aot);
-    invoke("set_all_always_on_top", { onTop: aot }).catch(() => {});
-    emitTo("main", "settings-position-changed", pos).catch(() => {});
-    emitTo("main", "settings-always-on-top-changed", aot).catch(() => {});
-    onClose();
-  }, [pos, aot, onClose]);
-
+function SettingsWorkArea() {
+  const [category, setCategory] = useState<"basic" | "theme">("basic");
+  const [theme, setTheme] = useState(() => { try { return localStorage.getItem("t-pet:theme") ?? "eva"; } catch { return "eva"; } });
+  const [customBg, setCustomBg] = useState(() => { try { return localStorage.getItem("t-pet:custom-bg") ?? ""; } catch { return ""; } });
+  const handleThemeSelect = useCallback((t: string) => { setTheme(t); try { localStorage.setItem("t-pet:theme", t); } catch {} const el = document.querySelector(".features-window"); if (el) el.setAttribute("data-theme", t); }, []);
+  const handleCustomTheme = useCallback(async () => {
+    const selected = await open({ filters: [{ name: "Images", extensions: ["png", "jpg", "jpeg", "webp"] }] });
+    if (!selected) return;
+    const path: string = (selected as { path?: string } | string) && typeof selected === "object" && "path" in selected ? (selected as { path: string }).path : selected as string;
+    if (!path) return;
+    const url = convertFileSrc(path);
+    setCustomBg(url);
+    try { localStorage.setItem("t-pet:custom-bg", url); } catch {}
+    setTheme("custom");
+    try { localStorage.setItem("t-pet:theme", "custom"); } catch {}
+    const el = document.querySelector(".features-window") as HTMLElement | null;
+    if (el) { el.setAttribute("data-theme", "custom"); el.style.backgroundImage = `url(${url})`; }
+  }, []);
   return (
-    <div className="settings-modal-overlay" onClick={onClose}>
-      <div className="settings-modal-card" onClick={(e) => e.stopPropagation()}>
-        <div className="settings-modal-header">
-          <span className="settings-modal-title">设置</span>
-          <button className="settings-modal-close" onClick={onClose}>✕</button>
-        </div>
-        <div className="settings-modal-body">
-          <label className="settings-modal-field">
-            <span className="settings-modal-label">默认显示位置</span>
-            <select className="settings-modal-select" value={pos} onChange={(e) => setPos(e.target.value as DisplayPosition)}>
-              {POSITION_OPTIONS.map((o) => <option key={o} value={o}>{POSITION_LABELS[o]}</option>)}
-            </select>
-          </label>
-          <div className="settings-modal-field settings-modal-field--toggle">
-            <span className="settings-modal-label">锁定层级</span>
-            <button type="button" role="switch" aria-checked={aot}
-              className={"settings-modal-toggle" + (aot ? " is-on" : "")}
-              onClick={() => setAot((p) => !p)}>
-              <span className="settings-modal-toggle-thumb" />
-            </button>
-          </div>
-        </div>
-        <div className="settings-modal-footer">
-          <button className="settings-modal-confirm" onClick={handleConfirm}>确定</button>
-          <button className="settings-modal-exit" onClick={() => invoke("exit_app")}>退出应用</button>
-        </div>
+    <div className="features-settings-work">
+      <nav className="features-settings-nav">
+        <button type="button" className={"features-settings-nav-item" + (category === "basic" ? " is-active" : "")} onClick={() => setCategory("basic")}>基础设置</button>
+        <button type="button" className={"features-settings-nav-item" + (category === "theme" ? " is-active" : "")} onClick={() => setCategory("theme")}>主题设置</button>
+      </nav>
+      <div className="features-settings-content">
+        {category === "basic" && <BasicSettings />}
+        {category === "theme" && <ThemeSettings theme={theme} onSelect={handleThemeSelect} customBg={customBg} onCustom={handleCustomTheme} />}
       </div>
     </div>
   );
 }
+
+function BasicSettings() {
+  const [position, setPosition] = useState<DisplayPosition>(readSavedPosition);
+  const [alwaysOnTop, setAlwaysOnTop] = useState(() => { try { return localStorage.getItem("t-pet:always-on-top") === "true"; } catch { return false; } });
+  const handleSave = useCallback(() => {
+    try { localStorage.setItem(DISPLAY_POSITION_KEY, position); } catch {}
+    try { localStorage.setItem("t-pet:always-on-top", String(alwaysOnTop)); } catch {}
+    invoke("set_all_always_on_top", { onTop: alwaysOnTop }).catch(() => {});
+    emitTo("main", "settings-position-changed", position).catch(() => {});
+    emitTo("main", "settings-always-on-top-changed", alwaysOnTop).catch(() => {});
+  }, [position, alwaysOnTop]);
+  const handleExit = useCallback(() => { void invoke("exit_app"); }, []);
+  return (
+    <><h2 className="features-settings-section-title">基础设置</h2>
+      <div className="features-settings-section-body">
+        <label className="features-settings-work-field"><span className="features-settings-work-label">默认显示位置</span>
+          <select className="features-settings-work-select" value={position} onChange={(e) => setPosition(e.target.value as DisplayPosition)}>
+            <option value="bottom-left">左下角</option><option value="bottom-right">右下角</option>
+            <option value="top-left">左上角</option><option value="top-right">右上角</option>
+          </select></label>
+        <div className="features-settings-work-field features-settings-work-field--toggle"><span className="features-settings-work-label">锁定层级</span>
+          <button type="button" role="switch" aria-checked={alwaysOnTop} className={"features-settings-work-toggle" + (alwaysOnTop ? " is-on" : "")} onClick={() => setAlwaysOnTop((p) => !p)}><span className="features-settings-work-toggle-thumb" /></button></div>
+      </div>
+      <div className="features-settings-work-footer">
+        <button className="features-settings-work-confirm" onClick={handleSave}>保存</button>
+        <button className="features-settings-work-exit" onClick={handleExit}>退出应用</button></div></>
+  );
+}
+
+interface ThemeDef { id: string; name: string; colors: string[]; bgImage?: string; isCustom?: boolean; }
+const THEMES: ThemeDef[] = [
+  { id: "blue-green", name: "蓝绿主题", colors: ["#0d7377", "#e8f4f8", "#14a3a8"] },
+  { id: "dark", name: "暗色主题", colors: ["#1e1e2e", "#2d2d3f", "#7c3aed"] },
+  { id: "light", name: "亮色主题", colors: ["#e5e7eb", "#f9fafb", "#2563eb"] },
+  { id: "eva", name: "EVA主题", colors: ["#3d1f5c", "#2a1040", "#8b5cf6"], bgImage: eva1Img },
+  { id: "custom", name: "自定义主题", colors: ["#3d1f5c", "#2a1040", "#8b5cf6"], isCustom: true },
+];
+function ThemeSettings({ theme, onSelect, customBg, onCustom }: { theme: string; onSelect: (t: string) => void; customBg: string; onCustom: () => void }) {
+  return (
+    <><h2 className="features-settings-section-title">主题设置</h2>
+      <div className="features-settings-theme-grid">{THEMES.map((t) => (
+        <button key={t.id} type="button" className={"features-settings-theme-card" + (theme === t.id ? " is-selected" : "")} onClick={() => { if (t.isCustom) onCustom(); else onSelect(t.id); }}>
+          <div className="features-settings-theme-preview" data-theme-preview={t.id}
+              style={t.bgImage || (t.isCustom && customBg) ? { backgroundImage: `url(${t.bgImage || customBg})`, backgroundSize: "cover", backgroundPosition: "center" } as React.CSSProperties : undefined}>
+              <div className="features-settings-theme-preview-header" style={{ background: t.colors[0] }} />
+              <div className="features-settings-theme-preview-body">
+                <div className="features-settings-theme-preview-sidebar" style={{ background: t.colors[1] }} />
+                <div className="features-settings-theme-preview-main" style={{ background: (t.bgImage || t.isCustom) ? "transparent" : t.colors[2] }} /></div></div>
+          <span className="features-settings-theme-name">{t.name}</span>
+          {theme === t.id && <span className="features-settings-theme-check">✓</span>}</button>))}</div></>
+  );
+}
+
 
 export function FeaturesPage() {
   const [activeFeature, setActiveFeature] = useState<FeatureId>(getInitialFeature);
@@ -2156,6 +2184,10 @@ export function FeaturesPage() {
     };
   }, []);
 
+  useEffect(() => { try { const saved = localStorage.getItem("t-pet:theme") ?? "eva";
+      const el = document.querySelector(".features-window") as HTMLElement | null;
+      if (el) { el.setAttribute("data-theme", saved); if (saved === "custom") { const bg = localStorage.getItem("t-pet:custom-bg"); if (bg) el.style.backgroundImage = `url(${bg})`; } }  } catch {} }, []);
+
   return (
     <main className="features-page">
       <div className="features-window">
@@ -2200,7 +2232,7 @@ export function FeaturesPage() {
                     key={f.id}
                     type="button"
                     className={`features-nav-item${activeFeature === f.id ? " is-active" : ""}`}
-                    onClick={() => setActiveFeature(f.id)}
+                    onClick={() => { setActiveFeature(f.id); setShowSettings(false); }}
                   >
                     {f.label}
                   </button>
@@ -2224,12 +2256,10 @@ export function FeaturesPage() {
           />
 
           <div className="features-work-area">
-            <WorkArea feature={activeFeature} />
+            {showSettings ? <SettingsWorkArea /> : <WorkArea feature={activeFeature} />}
           </div>
         </div>
       </div>
-
-      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
     </main>
   );
 }

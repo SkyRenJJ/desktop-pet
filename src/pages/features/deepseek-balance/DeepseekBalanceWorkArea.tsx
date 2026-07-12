@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import "./DeepseekBalanceWorkArea.css";
 
 const SK_KEY = "deepseek_api_key";

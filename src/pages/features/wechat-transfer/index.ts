@@ -1,1 +1,1 @@
-﻿export { default as WechatTransferWorkArea } from "./WechatTransferWorkArea";
+export { default as WechatTransferWorkArea } from "./WechatTransferWorkArea";
